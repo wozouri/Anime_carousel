@@ -1,2 +1,4 @@
 # Anime_Template
-qtWidget制作的轮播图
+
+## Anime_carrier_card
+- qtWidget制作的轮播图

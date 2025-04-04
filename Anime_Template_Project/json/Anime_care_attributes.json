@@ -1,0 +1,46 @@
+{
+    "Anime_img_str_list": [
+        {
+            "img": "://img/card_image1.png",
+            "str_1": "无职转生～到了异世界就拿出真本事～",
+            "str_2": "無職転生 ～異世界行ったら本気だす～",
+            "anime_url": "https://bangumi.tv/subject/277554"
+        },
+        {
+            "img": "://img/card_image2.png",
+            "str_1": "Code Geass 反叛的鲁路修",
+            "str_2": "コードギアス 反逆のルルーシュ",
+            "anime_url": "https://bangumi.tv/subject/793"
+        },
+        {
+            "img": "://img/card_image3.png",
+            "str_1": "凉宫春日的忧郁",
+            "str_2": "涼宮ハルヒの憂鬱",
+            "anime_url": "https://bangumi.tv/subject/1606"
+        },
+        {
+            "img": "://img/card_image4.png",
+            "str_1": "CLANNAD",
+            "str_2": "CLANNAD -クラナド",
+            "anime_url": "https://bangumi.tv/subject/51"
+        },
+        {
+            "img": "://img/card_image5.png",
+            "str_1": "我的青春恋爱物语果然有问题",
+            "str_2": "やはり俺の青春ラブコメはまちがっている",
+            "anime_url": "https://bangumi.tv/subject/54433"
+        },
+        {
+            "img": "://img/card_image6.png",
+            "str_1": "命运石之门",
+            "str_2": "STEINS;GATE",
+            "anime_url": "https://bangumi.tv/subject/10380"
+        },
+        {
+            "img": "://img/card_image7.png",
+            "str_1": "JOJO的奇妙冒险",
+            "str_2": "ジョジョの奇妙な冒険",
+            "anime_url": "https://bangumi.tv/subject/43558"
+        }
+    ]
+}

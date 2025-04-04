@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/">
+        <file>img/card_image1.png</file>
+        <file>img/card_image2.png</file>
+        <file>img/card_image3.png</file>
+        <file>img/card_image4.png</file>
+        <file>img/card_image5.png</file>
+        <file>img/card_image6.png</file>
+        <file>img/card_image7.png</file>
+    </qresource>
+    <qresource prefix="/json">
+        <file>json/Anime_care_attributes.json</file>
+    </qresource>
+</RCC>

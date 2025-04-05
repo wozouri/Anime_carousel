@@ -4,3 +4,6 @@
 
 #### qtWidget制作的轮播图
 <img src="res/carousel_card.png" style="border-radius: 10px;width: 30rem">
+
+#### 《QWidget按钮 》 波纹和波浪
+<img src="res/2_btn.png" style="border-radius: 10px;width: 30rem">

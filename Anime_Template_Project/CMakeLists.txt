@@ -28,6 +28,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         Carousel_card/card_text.h Carousel_card/card_text.cpp
         Carousel_card/card_text.h Carousel_card/card_text.cpp
         Carousel_card/card_button.h Carousel_card/card_button.cpp
+        button_class/diffusion_button.h button_class/diffusion_button.cpp
+        button_class/wave_button.h button_class/wave_button.cpp
+
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET Anime_Template_Project APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

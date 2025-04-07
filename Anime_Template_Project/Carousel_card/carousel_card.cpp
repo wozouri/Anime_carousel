@@ -16,7 +16,7 @@ Carousel_card::Carousel_card(QWidget *parent)
         Anime_cards_spacing);
 }
 
-void Carousel_card::Anime_card_position_update(int m_carrier_card_id)
+void Carousel_card::Anime_card_position_update(int m_carrier_card_id) //更新位置，整体排序
 {
     qDebug() << "m_carrier_card_id" << m_carrier_card_id;
     int timeA = animation_duration;
@@ -65,13 +65,13 @@ void Carousel_card::Anime_card_position_update(int m_carrier_card_id)
     }
 }
 
-void Carousel_card::onwheel_TimerTimeout()
+void Carousel_card::onwheel_TimerTimeout() //关闭定时器
 {
     clickTimer.stop(); // 定时器超时后停止
 }
 
 
-void  Carousel_card::Anime_Anima_set(Carrier_card* Anime_cards,QPoint Anime_zasyo, int Anime_time)
+void  Carousel_card::Anime_Anima_set(Carrier_card* Anime_cards,QPoint Anime_zasyo, int Anime_time) //动画设置
 {
     //设置为顶层
     Anime_cards->raise();
@@ -86,7 +86,7 @@ void  Carousel_card::Anime_Anima_set(Carrier_card* Anime_cards,QPoint Anime_zasy
 }
 
 
-void Carousel_card::Anime_basic_information()
+void Carousel_card::Anime_basic_information() //获取json文件中，构建卡片
 {
     //读取当前目录下的json文件
     QFile file(":/json/json/Anime_care_attributes.json");
@@ -106,7 +106,8 @@ void Carousel_card::Anime_basic_information()
     QJsonObject rootObject = document.object();
     QJsonArray hobbiesArray = rootObject["Anime_img_str_list"].toArray();
 
-    for (const QJsonValue& value : hobbiesArray) {
+    for (const QJsonValue& value : hobbiesArray)
+    {
         QJsonObject addressObject = value.toObject();
         if (!QFile::exists(addressObject["img"].toString())) //判断图片资源文件是否存在
         {
@@ -138,7 +139,7 @@ void Carousel_card::Anime_basic_information()
 void Carousel_card::Anime_cards_sorting(QList<Carrier_card *> &Anime_seven_cards_list,
     int Anime_cards_startX, 
     int Anime_cards_cardWidth, 
-    int Anime_cards_spacing)
+    int Anime_cards_spacing) //设置卡片位置， 获取坐标列表
 {
     int currentX = Anime_cards_startX;
     for (Carrier_card* Anime_cards : Anime_seven_cards_list)
@@ -189,7 +190,6 @@ void Carousel_card::wheelEvent(QWheelEvent* event)
         }
         else qDebug() << "点击频率过快，请稍后再试"; // 如果在限制时间内，可以选择忽略点击事件或给出提示
             
-
 
     }
     else if (event->angleDelta().y() < 0)

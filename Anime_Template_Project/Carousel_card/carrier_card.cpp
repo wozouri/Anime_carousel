@@ -5,11 +5,9 @@ Carrier_card::Carrier_card(QPixmap m_carrier_card, QString main_title, QString s
 {
      
     this->setMaximumSize(860, 480); //最大宽高
-     
     this->resize(320, 480); //设置宽和高
 
     this->m_carrier_card = m_carrier_card;
-
     this->font_related_construction(main_title, sub_title); //字体相关构造
 
     this->set_gradient_color();
@@ -17,10 +15,10 @@ Carrier_card::Carrier_card(QPixmap m_carrier_card, QString main_title, QString s
     setMouseTracking(true); // 启用持续鼠标跟踪（无需按下按钮）
      
     connect(&m_clickTimer, &QTimer::timeout, this, &Carrier_card::onClickTimerTimeout); // 初始化定时器
+    connect(&timer4s, &QTimer::timeout, this, &Carrier_card::circle_reset); // 初始化定时器
 
-    connect(&timer4s, &QTimer::timeout, this, &Carrier_card::circle_reset);
 
-    shadow = new QGraphicsDropShadowEffect(Anime_button);
+    shadow = new QGraphicsDropShadowEffect(Anime_button); // 创建阴影效果对象
     shadow->setOffset(0, 0); // 设置阴影偏移量
     shadow->setBlurRadius(150); // 设置阴影模糊半径
     shadow->setColor(Qt::black); // 设置阴影颜色
@@ -70,11 +68,8 @@ bool Carrier_card::event(QEvent* e)
     if (e->type() == QEvent::Enter)
     {
         this->isClicked = true;
-        
+
         if (this->m_carrier_card_id == 2) timer4s.stop();
-
-
-        qDebug() << "鼠标进入";
 
     }
     else if (e->type() == QEvent::Leave)

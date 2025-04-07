@@ -43,15 +43,15 @@ public:
     QTimer timer4s;
     int TimerTimeout = 0;
     bool display_circle = false;
-    void restore_disc();
+    void restore_disc(); //扇形圆形恢复
 
 
-    void onClickTimerTimeout();
+    void onClickTimerTimeout();  // 定时器超时后停止
     void circle_reset();
     //void restore_circle();
     QPoint mousePos; // 鼠标位置
     bool isClicked = false; // 鼠标是否按下
-    void draw_radial_gradient_circle();
+    void draw_radial_gradient_circle();  //绘制跟随鼠标位置的圆形渐变
 
 public://字体相关
 
@@ -81,17 +81,17 @@ public:
     int circle_degrees() const;
     void setCircle_degrees(int newCircle_degrees);
 
-    void Anime_card_1();                             //第一卡片视图
+    void Anime_card_1(); //卡片形态初始化
     void setcarrier_card_id(int newCarrier_card_id); //设置卡片id
+     
+    QColor getMostFrequentColor(const QPixmap& pixmap);  //获取图片中最频繁的颜色
 
-    QColor getMostFrequentColor(const QPixmap& pixmap);
-
-    void set_gradient_color();
+    void set_gradient_color(); //设置最亮的颜色和次亮的颜色
 
     void draw_sector_circle();
 
 public slots:
-    void Anime_card_transformation(int animation_duration);                //卡片变化
+    void Anime_card_transformation(int animation_duration);     //动画开始 //卡片变化
 
 signals:
     void carrier_card_idChanged(int m_carrier_card_id);

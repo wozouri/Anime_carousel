@@ -27,18 +27,17 @@ public:
 
     QList<QPoint> Anime_seven_cards_zasyo_list;
 
-    void Anime_basic_information();
+    void Anime_basic_information();  //获取json文件中，构建卡片
 
-    //排序函数
     void Anime_cards_sorting(QList<Carrier_card*>&  Anime_seven_cards_list,
         int Anime_cards_startX,
         int Anime_cards_cardWidth,
-        int Anime_cards_spacing);
+        int Anime_cards_spacing); //设置卡片位置， 获取坐标列表
 
-    void Anime_Anima_set(Carrier_card* Anime_cards,QPoint Anime_zasyo,int Anime_time);
+    void Anime_Anima_set(Carrier_card* Anime_cards,QPoint Anime_zasyo,int Anime_time); //动画设置
 
 public slots: 
-    void Anime_card_position_update(int m_carrier_card_id);
+    void Anime_card_position_update(int m_carrier_card_id); //更新位置，整体排序
     void onwheel_TimerTimeout();
 
 signals: 

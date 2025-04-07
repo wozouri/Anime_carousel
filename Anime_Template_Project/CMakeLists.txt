@@ -30,6 +30,16 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         Carousel_card/card_button.h Carousel_card/card_button.cpp
         button_class/diffusion_button.h button_class/diffusion_button.cpp
         button_class/wave_button.h button_class/wave_button.cpp
+        Login_interface/responsive_form.h Login_interface/responsive_form.cpp
+        Login_interface/scroll_bar.h Login_interface/scroll_bar.cpp
+        Login_interface/login_form.h Login_interface/login_form.cpp
+        Login_interface/registration_form.h Login_interface/registration_form.cpp
+
+        Login_interface/input_box.h Login_interface/input_box.cpp
+        Login_interface/login_button.h Login_interface/login_button.cpp
+        Login_interface/other_login_buttons.h Login_interface/other_login_buttons.cpp
+        Login_interface/transparent_transition_interface.h Login_interface/transparent_transition_interface.cpp
+        Login_interface/hollow_button.h Login_interface/hollow_button.cpp
 
     )
 # Define target properties for Android with Qt 6 as:

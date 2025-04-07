@@ -8,7 +8,7 @@ Card_button::Card_button(QString text, QColor button_color, QWidget* parent) : Q
 
     this->color_control();
 
-    animation = new QPropertyAnimation(this, "color_opacity");
+    animation = new QPropertyAnimation(this, "color_opacity"); 
     animation->setDuration(100); // 设置动画持续时间为1000毫秒
     animation->setStartValue(this->color_opacity()); // 设置动画开始时的透明度值
     animation->setEndValue(0); // 设置动画结束时的透明度值
@@ -16,11 +16,12 @@ Card_button::Card_button(QString text, QColor button_color, QWidget* parent) : Q
     connect(this, &Card_button::pressed, this, &Card_button::openWebsite);
 }
 
-void Card_button::openWebsite() {
+void Card_button::openWebsite() //打开网页
+{
     QDesktopServices::openUrl(QUrl(website_url));
 }
 
-void Card_button::setWebsite_url(QString url)
+void Card_button::setWebsite_url(QString url) //设置网址
 {
     this->website_url = url;
 }
@@ -74,25 +75,14 @@ void Card_button::paintEvent(QPaintEvent* event)
     painter.setFont(font);
 
     painter.drawText(45, 21, btntext);
-
-
-
-
-
-
-
-
-
 }
 
 bool Card_button::event(QEvent* e)
 {
     if (e->type() == QEvent::Enter)
     {
-
         animation->setDirection(QPropertyAnimation::Forward); // 设置动画方向为向前
         animation->start(); // 启动动画
-
 
         qDebug() << "鼠标进入";
     }
@@ -102,14 +92,9 @@ bool Card_button::event(QEvent* e)
         animation->setDirection(QPropertyAnimation::Backward); // 设置动画方向为向后
         animation->start(); // 启动动画
         
-
         qDebug() << "鼠标离开";
         update();
     }
-
-
-
-
 
     return QPushButton::event(e);
 
@@ -159,7 +144,6 @@ void Card_button::setButton_color(const QColor &newButton_color)
         return;
     m_button_color = newButton_color;
     update();
-    emit button_colorChanged();
 }
 
 void Card_button::color_control()
@@ -184,5 +168,4 @@ void Card_button::setcolor_opacity(int newColor_opacity)
         return;
     m_color_opacity = newColor_opacity;
     update();
-    emit color_opacityChanged();
 }

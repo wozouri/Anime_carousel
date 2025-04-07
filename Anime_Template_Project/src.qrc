@@ -7,6 +7,13 @@
         <file>img/card_image5.png</file>
         <file>img/card_image6.png</file>
         <file>img/card_image7.png</file>
+        <file>img/account.png</file>
+        <file>img/password.png</file>
+        <file>img/facebook.png</file>
+        <file>img/github-fill.png</file>
+        <file>img/instagram.png</file>
+        <file>img/logo_google.png</file>
+        <file>img/email.png</file>
     </qresource>
     <qresource prefix="/json">
         <file>json/Anime_care_attributes.json</file>

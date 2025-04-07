@@ -12,8 +12,8 @@
 class Card_button : public QPushButton
 {
     Q_OBJECT
-    Q_PROPERTY(QColor button_color READ getbutton_color WRITE setButton_color NOTIFY button_colorChanged FINAL)
-    Q_PROPERTY(int color_opacity READ color_opacity WRITE setcolor_opacity NOTIFY color_opacityChanged FINAL)
+    Q_PROPERTY(QColor button_color READ getbutton_color WRITE setButton_color   FINAL)
+    Q_PROPERTY(int color_opacity READ color_opacity WRITE setcolor_opacity   FINAL)
 
 
 public:
@@ -33,14 +33,10 @@ public:
     int color_opacity() const;
     void setcolor_opacity(int newColor_opacity);
 
-    void openWebsite();
-    QString website_url;
-    void setWebsite_url(QString url);
+    void openWebsite();//打开网页
+    void setWebsite_url(QString url); //设置网址
 
-signals:
-    void button_colorChanged();
 
-    void color_opacityChanged();
 
 protected:
     //绘制
@@ -54,6 +50,7 @@ protected:
 private:
 
     QPropertyAnimation* animation;
+    QString website_url;
 
     QColor m_button_color;
     int m_color_opacity = 255;

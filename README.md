@@ -7,3 +7,6 @@
 
 #### 《QWidget按钮 》 波纹和波浪
 <img src="res/2_btn.png" style="border-radius: 10px;width: 30rem">
+
+#### 《QWidget登录页面 》 登录注册效果
+<img src="res/Responsive_form.png" style="border-radius: 10px;width: 30rem">

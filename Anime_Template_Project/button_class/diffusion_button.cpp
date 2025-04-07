@@ -2,16 +2,14 @@
 
 Diffusion_button::Diffusion_button(QWidget* parent) : QPushButton{ parent }
 {
-
     this->setCursor(Qt::PointingHandCursor);
-
     this->resize(130, 42);
 
     QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect(this);
-    shadow->setOffset(0, 16); // 设置阴影偏移量
-    shadow->setBlurRadius(50); // 设置阴影模糊半径
-    shadow->setColor(QColor(0, 0, 0, 166)); // 设置阴影颜色
-    this->setGraphicsEffect(shadow); // 将阴影效果应用到按钮上
+    shadow->setOffset(0, 16);
+    shadow->setBlurRadius(50);
+    shadow->setColor(QColor(0, 0, 0, 166));
+    this->setGraphicsEffect(shadow);
 
     animation3 = new QPropertyAnimation(this, "radius");
     animation3->setDuration(400);
@@ -31,50 +29,44 @@ Diffusion_button::Diffusion_button(QWidget* parent) : QPushButton{ parent }
     connect(animation1, &QPropertyAnimation::finished, this, &Diffusion_button::reset_animation);
 }
 
-void Diffusion_button::draw_disappearing_circle() // 绘制 扩散圆
+void Diffusion_button::draw_disappearing_circle()
 {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
-
-    painter.setPen(Qt::NoPen); // 设置画笔为无，即不绘制边框
-
-    QBrush brush(QColor(135, 206, 235, m_opacity)); // 设置填充颜色为 color
+    painter.setPen(Qt::NoPen);
+    QBrush brush(QColor(135, 206, 235, m_opacity));
     painter.setBrush(brush);
-    painter.drawEllipse(mouse_coordinates, m_radius, m_radius); // 绘制一个以 point 为中心，半径为 radius 的圆
+    painter.drawEllipse(mouse_coordinates, m_radius, m_radius);
 }
 
-void Diffusion_button::execute_animation() // 执行动画
+void Diffusion_button::execute_animation()
 {
     animation3->start();
     animation1->start();
 }
 
-void Diffusion_button::reset_animation() // 重置动画
+void Diffusion_button::reset_animation()
 {
     m_radius = 0;
     m_opacity = 255;
 }
 
-void Diffusion_button::paintEvent(QPaintEvent *event) // 绘制按钮
+void Diffusion_button::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setViewport(0, 0, width(), height());
     painter.setWindow(0, 0, width(), height());
 
-    // 裁剪路径
     QPainterPath path;
     path.addRoundedRect(0, 0, width(), height(), 21, 21);
     painter.setClipPath(path);
     painter.setPen(Qt::NoPen);
 
-    // 绘制纯白矩形
-    QBrush Brush(QColor(255,255,255,255));
+    QBrush Brush(QColor(255, 255, 255, 255));
     painter.setBrush(Brush);
-    painter.drawRect(0, 0, width(), height()); 
-
-    // 绘制扩散圆
-    this->draw_disappearing_circle(); 
+    painter.drawRect(0, 0, width(), height());
+    this->draw_disappearing_circle();
 }
 
 void Diffusion_button::mousePressEvent(QMouseEvent *event)

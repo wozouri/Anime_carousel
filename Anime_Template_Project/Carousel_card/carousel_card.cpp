@@ -4,7 +4,6 @@
 Carousel_card::Carousel_card(QWidget *parent)
     : QWidget{parent}
 {
-    //设置窗口最大为1930 * 520
     this->setMaximumSize(1900, 530);
     this->setMinimumSize(1300, 530);
 
@@ -16,7 +15,7 @@ Carousel_card::Carousel_card(QWidget *parent)
         Anime_cards_spacing);
 }
 
-void Carousel_card::Anime_card_position_update(int m_carrier_card_id) //更新位置，整体排序
+void Carousel_card::Anime_card_position_update(int m_carrier_card_id)
 {
     qDebug() << "m_carrier_card_id" << m_carrier_card_id;
     int timeA = animation_duration;
@@ -65,15 +64,14 @@ void Carousel_card::Anime_card_position_update(int m_carrier_card_id) //更新�
     }
 }
 
-void Carousel_card::onwheel_TimerTimeout() //关闭定时器
+void Carousel_card::onwheel_TimerTimeout()
 {
-    clickTimer.stop(); // 定时器超时后停止
+    clickTimer.stop();
 }
 
 
-void  Carousel_card::Anime_Anima_set(Carrier_card* Anime_cards,QPoint Anime_zasyo, int Anime_time) //动画设置
+void  Carousel_card::Anime_Anima_set(Carrier_card* Anime_cards,QPoint Anime_zasyo, int Anime_time)
 {
-    //设置为顶层
     Anime_cards->raise();
     Anime_cards->Anime_card_transformation(Anime_time);
     QPropertyAnimation* Anime_anima = new QPropertyAnimation(Anime_cards, "pos");
@@ -86,9 +84,8 @@ void  Carousel_card::Anime_Anima_set(Carrier_card* Anime_cards,QPoint Anime_zasy
 }
 
 
-void Carousel_card::Anime_basic_information() //获取json文件中，构建卡片
+void Carousel_card::Anime_basic_information()
 {
-    //读取当前目录下的json文件
     QFile file(":/json/json/Anime_care_attributes.json");
     if (!file.open(QIODevice::ReadOnly))
     {
@@ -109,7 +106,7 @@ void Carousel_card::Anime_basic_information() //获取json文件中，构建卡�
     for (const QJsonValue& value : hobbiesArray)
     {
         QJsonObject addressObject = value.toObject();
-        if (!QFile::exists(addressObject["img"].toString())) //判断图片资源文件是否存在
+        if (!QFile::exists(addressObject["img"].toString()))
         {
             qDebug() << "图片资源文件不存在";
             continue;
@@ -124,22 +121,22 @@ void Carousel_card::Anime_basic_information() //获取json文件中，构建卡�
         connect(Anime_cards, &Carrier_card::carrier_card_idChanged, this, &Carousel_card::Anime_card_position_update);
 
         QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect(Anime_cards);
-        shadow->setOffset(0, 0); // 设置阴影偏移量
-        shadow->setBlurRadius(80); // 设置阴影模糊半径
-        shadow->setColor(Anime_cards->m_color3); // 设置阴影颜色
+        shadow->setOffset(0, 0);
+        shadow->setBlurRadius(80);
+        shadow->setColor(Anime_cards->m_color3);
         Anime_cards->setGraphicsEffect(shadow);
 
         Anime_seven_cards_list.append(Anime_cards);
     }
 
     connect(this, &Carousel_card::wheel_signalChanged, this, &Carousel_card::Anime_card_position_update);
-    connect(&clickTimer, &QTimer::timeout, this, &Carousel_card::onwheel_TimerTimeout); // 初始化定时器
+    connect(&clickTimer, &QTimer::timeout, this, &Carousel_card::onwheel_TimerTimeout);
 }
 
 void Carousel_card::Anime_cards_sorting(QList<Carrier_card *> &Anime_seven_cards_list,
     int Anime_cards_startX, 
     int Anime_cards_cardWidth, 
-    int Anime_cards_spacing) //设置卡片位置， 获取坐标列表
+    int Anime_cards_spacing)
 {
     int currentX = Anime_cards_startX;
     for (Carrier_card* Anime_cards : Anime_seven_cards_list)
@@ -165,11 +162,10 @@ void Carousel_card::Anime_cards_sorting(QList<Carrier_card *> &Anime_seven_cards
     }
 }
 
-void Carousel_card::mousePressEvent(QMouseEvent* event) //鼠标按下事件
+void Carousel_card::mousePressEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::RightButton)
     {
-        qDebug() << "鼠标you键按下";
         emit wheel_signalChanged(San);
     }
     QWidget::mousePressEvent(event);
@@ -178,30 +174,23 @@ void Carousel_card::mousePressEvent(QMouseEvent* event) //鼠标按下事件
 void Carousel_card::wheelEvent(QWheelEvent* event)
 {
 
-    // 判断滚轮方向
-    if (event->angleDelta().y() > 0)// 向上滚动
+    if (event->angleDelta().y() > 0)
     {
-        // 检查是否在限制时间内
-        if (!clickTimer.isActive()) // 如果定时器未启动，则允许点击
+        if (!clickTimer.isActive())
         {
             emit wheel_signalChanged(Yizi);
-            qDebug() << "鼠标滚轮向上滚动";
-            clickTimer.start(310); // 1000毫秒 // 启动定时器，限制1秒内再次点击
+            clickTimer.start(310);
         }
-        else qDebug() << "点击频率过快，请稍后再试"; // 如果在限制时间内，可以选择忽略点击事件或给出提示
             
 
     }
     else if (event->angleDelta().y() < 0)
     {
-        // 检查是否在限制时间内
-        if (!clickTimer.isActive()) // 如果定时器未启动，则允许点击
+        if (!clickTimer.isActive())
         {
             emit wheel_signalChanged(San);
-            qDebug() << "鼠标滚轮向下滚动";
-            clickTimer.start(170); // 1000毫秒 // 启动定时器，限制1秒内再次点击
+            clickTimer.start(170);
         }
-        else qDebug() << "点击频率过快，请稍后再试"; // 如果在限制时间内，可以选择忽略点击事件或给出提示
     }   
 }
 

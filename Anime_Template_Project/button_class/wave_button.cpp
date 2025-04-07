@@ -7,20 +7,20 @@ Wave_button::Wave_button(QWidget* parent) : QPushButton{ parent }
     m_wave_position = sqrt(pow(width(), 2) + pow(width(), 2)) / 2;
 
     QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect(this);
-    shadow->setOffset(0, 16); // 设置阴影偏移量
-    shadow->setBlurRadius(50); // 设置阴影模糊半径
-    shadow->setColor(QColor(0, 0, 0, 255)); // 设置阴影颜色
-    this->setGraphicsEffect(shadow); // 将阴影效果应用到按钮上
+    shadow->setOffset(0, 16);
+    shadow->setBlurRadius(50);
+    shadow->setColor(QColor(0, 0, 0, 255));
+    this->setGraphicsEffect(shadow);
 
 }
 
-double Wave_button::triangle_position() // 直角三角形的斜边长度的一半
+double Wave_button::triangle_position()
 {
     return sqrt(pow(width(), 2) + pow(width(), 2)) / 2;;
 }
 
 
-void Wave_button::rotating_rounded_rectangle() // 顺时针 绘制旋转的圆角矩形
+void Wave_button::rotating_rounded_rectangle()
 {
     QPainter painter(this); 
     painter.setRenderHint(QPainter::Antialiasing, true);
@@ -43,7 +43,7 @@ void Wave_button::rotating_rounded_rectangle() // 顺时针 绘制旋转的圆�
 
 }
 
-void Wave_button::rotating_rounded_rectangle1() // 逆时针 绘制旋转的圆角矩形
+void Wave_button::rotating_rounded_rectangle1()
 {
 
     QPainter painter(this);
@@ -66,7 +66,7 @@ void Wave_button::rotating_rounded_rectangle1() // 逆时针 绘制旋转的圆�
 }
 
 
-void Wave_button::draw_border() // 绘制边框
+void Wave_button::draw_border()
 {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
@@ -84,7 +84,7 @@ void Wave_button::draw_border() // 绘制边框
 }
 
 
-void Wave_button::draw_text() // 绘制文字
+void Wave_button::draw_text()
 {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
@@ -96,7 +96,6 @@ void Wave_button::draw_text() // 绘制文字
     QFont   font1;
 
     font1.setPointSize(13);
-    //设置字体间距
     font1.setLetterSpacing(QFont::AbsoluteSpacing, 2);
 
     font1.setBold(true);
@@ -128,7 +127,7 @@ void Wave_button::paintEvent(QPaintEvent* event)
 }
 
 
-void Wave_button::execute_animation() // 执行动画
+void Wave_button::execute_animation()
 {
     QPropertyAnimation* animation1 = new QPropertyAnimation(this, "angle");
     animation1->setDuration(execution_time);
@@ -160,7 +159,7 @@ void Wave_button::execute_animation() // 执行动画
     animation3->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
-void Wave_button::restore_animation() // 恢复动画
+void Wave_button::restore_animation()
 {
     QPropertyAnimation* animation1 = new QPropertyAnimation(this, "angle");
     animation1->setDuration(execution_time);
@@ -198,7 +197,7 @@ void Wave_button::restore_animation() // 恢复动画
 
 
 
-void Wave_button::mousePressEvent(QMouseEvent *event) // 鼠标点击事件
+void Wave_button::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton)
     {

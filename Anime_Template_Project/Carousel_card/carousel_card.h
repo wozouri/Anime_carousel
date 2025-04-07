@@ -6,14 +6,11 @@
 #include <QList>
 #include <QPropertyAnimation>
 #include <QTimer>
-#include <QGraphicsDropShadowEffect> //阴影
-//JSON
+#include <QGraphicsDropShadowEffect>
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
-
-
 
 class Carousel_card : public QWidget
 {
@@ -21,42 +18,36 @@ class Carousel_card : public QWidget
 public:
     explicit Carousel_card(QWidget *parent = nullptr);
 
-
 public:
-    QList<Carrier_card*>  Anime_seven_cards_list;
-
+    QList<Carrier_card*> Anime_seven_cards_list;
     QList<QPoint> Anime_seven_cards_zasyo_list;
 
-    void Anime_basic_information();  //获取json文件中，构建卡片
+    void Anime_basic_information();
+    void Anime_cards_sorting(QList<Carrier_card*>& Anime_seven_cards_list,
+                             int Anime_cards_startX,
+                             int Anime_cards_cardWidth,
+                             int Anime_cards_spacing);
+    void Anime_Anima_set(Carrier_card* Anime_cards, QPoint Anime_zasyo, int Anime_time);
 
-    void Anime_cards_sorting(QList<Carrier_card*>&  Anime_seven_cards_list,
-        int Anime_cards_startX,
-        int Anime_cards_cardWidth,
-        int Anime_cards_spacing); //设置卡片位置， 获取坐标列表
-
-    void Anime_Anima_set(Carrier_card* Anime_cards,QPoint Anime_zasyo,int Anime_time); //动画设置
-
-public slots: 
-    void Anime_card_position_update(int m_carrier_card_id); //更新位置，整体排序
+public slots:
+    void Anime_card_position_update(int m_carrier_card_id);
     void onwheel_TimerTimeout();
 
-signals: 
+signals:
     void wheel_signalChanged(int wheel_signal);
 
 protected:
     void mousePressEvent(QMouseEvent *event);
-    
     void wheelEvent(QWheelEvent *event);
-
 
 private:
     QTimer clickTimer;
     int Yizi = 1;
     int San = 3;
-    int Anime_cards_startX = -628; // 起始位置
-    int Anime_cards_cardWidth = 320; // 卡片宽度
-    int Anime_cards_spacing = 13; // 卡片间隔
-    int animation_duration = 410; // 动画持续时间
+    int Anime_cards_startX = -628;
+    int Anime_cards_cardWidth = 320;
+    int Anime_cards_spacing = 13;
+    int animation_duration = 410;
 };
 
 #endif // CAROUSEL_CARD_H

@@ -6,8 +6,6 @@ Anime_Homepage::Anime_Homepage(QWidget *parent)
 
     
 
-    registration_form = new Responsive_form();
-    registration_form->show();
 
 
 

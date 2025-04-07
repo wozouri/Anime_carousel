@@ -14,44 +14,28 @@ class Diffusion_button : public QPushButton
     Q_PROPERTY(int radius READ radius WRITE setRadius NOTIFY radiusChanged FINAL)
     Q_PROPERTY(int opacity READ opacity WRITE setOpacity NOTIFY opacityChanged FINAL)
 
-
 public:
     explicit Diffusion_button(QWidget* parent = nullptr);
-
-
-    void draw_disappearing_circle(); // 绘制 扩散圆
-
-    void execute_animation(); // 执行动画
-
-
-
+    void draw_disappearing_circle();
+    void execute_animation();
     QPoint mouse_coordinates;
-
     QPropertyAnimation* animation1;
     QPropertyAnimation* animation3;
-
-    void reset_animation(); // 重置动画
+    void reset_animation();
 
 public:
     int radius() const;
     void setRadius(int newRadius);
-
     int opacity() const;
     void setOpacity(int newOpacity);
 
-
 signals:
     void radiusChanged();
-
     void opacityChanged();
 
 protected:
-    //绘制
     void paintEvent(QPaintEvent* event);
-    //点击
     void mousePressEvent(QMouseEvent* event);
-
-
 
 private:
     int m_radius = 0;

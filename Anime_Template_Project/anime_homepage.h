@@ -27,6 +27,5 @@ public:
     Anime_Homepage(QWidget *parent = nullptr);
     ~Anime_Homepage();
 
-    Responsive_form*registration_form;
 };
 #endif // ANIME_HOMEPAGE_H

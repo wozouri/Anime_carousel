@@ -6,20 +6,17 @@
 #include <QPainterPath>
 #include <QPropertyAnimation>
 
-
-class Scroll_bar : public QWidget //蓝布
+class Scroll_bar : public QWidget
 {
     Q_OBJECT
 public:
     explicit Scroll_bar(QWidget *parent = nullptr);
 
-  
 protected:
     void paintEvent(QPaintEvent *event);
 
 public:
-    void crop_corner(); //裁剪圆角
-
+    void crop_corner();
 };
 
 #endif // SCROLL_BAR_H

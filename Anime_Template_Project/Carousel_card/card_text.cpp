@@ -12,8 +12,8 @@ void Card_text::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
     QRect rect(0, 0, width(), height());
-    painter.setViewport(rect);          //设置Viewport
-    painter.setWindow(0, 0, m_shrink_width, height());  //设置窗口
+    painter.setViewport(rect);
+    painter.setWindow(0, 0, m_shrink_width, height());
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setRenderHint(QPainter::TextAntialiasing);
 
@@ -25,7 +25,7 @@ void Card_text::paintEvent(QPaintEvent *event)
     painter.setFont(font1);
     QColor semiTransparent(255, 255, 255, 255);
     painter.setPen(semiTransparent);
-    QRect actualRect = painter.boundingRect(rect1, Qt::TextWordWrap | Qt::AlignLeft | Qt::AlignBottom, text_main);  //计算高度
+    QRect actualRect = painter.boundingRect(rect1, Qt::TextWordWrap | Qt::AlignLeft | Qt::AlignBottom, text_main);
     rect1.setHeight(actualRect.height());
     painter.drawText(rect1, text_main);
 
@@ -37,7 +37,7 @@ void Card_text::paintEvent(QPaintEvent *event)
     painter.setFont(font);
     QColor semiTransparent1(255, 255, 255, m_enlarge_width);
     painter.setPen(semiTransparent1);
-    QRect actualRect1 = painter.boundingRect(rect2, Qt::TextWordWrap | Qt::AlignLeft | Qt::AlignBottom, text_sub);  //计算高度
+    QRect actualRect1 = painter.boundingRect(rect2, Qt::TextWordWrap | Qt::AlignLeft | Qt::AlignBottom, text_sub);
     rect2.setHeight(actualRect1.height());
     painter.drawText(rect2, text_sub);
 
@@ -48,7 +48,6 @@ void Card_text::paintEvent(QPaintEvent *event)
 
 
 
-//执行动画
 void Card_text::start_animation(int animation_duration)
 {
     QPropertyAnimation *animation = new QPropertyAnimation(this, "shrink_width");
@@ -88,7 +87,6 @@ void Card_text::start_animation(int animation_duration)
 
 
 }
-//还原动画
 void Card_text::reset_animation(int animation_duration)
 {
 

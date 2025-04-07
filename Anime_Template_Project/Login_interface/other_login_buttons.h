@@ -6,9 +6,7 @@
 #include <QPainter>
 #include <QPainterPath>
 
-
-
-class Other_login_buttons : public QPushButton //小图标
+class Other_login_buttons : public QPushButton
 {
     Q_OBJECT
 public:
@@ -17,12 +15,8 @@ public:
 protected:
     void paintEvent(QPaintEvent *event);
 
-
-
 private:
-    QPixmap icon; // 图标
-
-
+    QPixmap icon;
 };
 
 #endif // OTHER_LOGIN_BUTTONS_H

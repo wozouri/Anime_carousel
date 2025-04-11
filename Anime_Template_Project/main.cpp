@@ -1,18 +1,11 @@
 #include "anime_homepage.h"
-#include "Login_interface/responsive_form.h"
-
-
+#include "dial_class/Knob_page.h"
 #include <QApplication>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-
-    Responsive_form r;
-    r.show();
-
-    //Anime_Homepage w;
-    //w.show();
-
+    Knob_page w;
+    w.show();
     return a.exec();
 }

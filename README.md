@@ -33,3 +33,6 @@
 
 #### 《QWidget旋钮》 渐变旋钮控件
 <img src="res/gradient_knob.png" style="border-radius: 10px; height: 100px">
+
+#### 《QWidget旋钮》 渐变旋钮控件
+<img src="res/Adaptive_Carousel.png" style="border-radius: 10px; height: 100px">

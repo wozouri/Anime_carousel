@@ -9,8 +9,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets OpenGLWidgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets OpenGLWidgets)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -41,9 +41,11 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         Login_interface/transparent_transition_interface.h Login_interface/transparent_transition_interface.cpp
         Login_interface/hollow_button.h Login_interface/hollow_button.cpp
         utility_class/timer_animation.h utility_class/timer_animation.cpp
+        utility_class/Dougu.h utility_class/Dougu.cpp
         dial_class/temperature_dial.h dial_class/temperature_dial.cpp
         utility_class/timer_animationgroup.h utility_class/timer_animationgroup.cpp
         dial_class/knob_page.h dial_class/knob_page.cpp
+        Adaptive_Carousel/daen_no_kado.cpp Adaptive_Carousel/daen_no_kado.h Adaptive_Carousel/latticed_circle_button.cpp Adaptive_Carousel/latticed_circle_button.h
 
 
 
@@ -68,7 +70,7 @@ else()
     endif()
 endif()
 
-target_link_libraries(Anime_Template_Project PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(Anime_Template_Project PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGLWidgets)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

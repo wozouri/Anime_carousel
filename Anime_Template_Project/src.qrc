@@ -14,6 +14,13 @@
         <file>img/instagram.png</file>
         <file>img/logo_google.png</file>
         <file>img/email.png</file>
+        <file>img/card_image1.jpg</file>
+        <file>img/card_image2.jpg</file>
+        <file>img/card_image3.jpg</file>
+        <file>img/card_image4.jpg</file>
+        <file>img/card_image5.jpg</file>
+        <file>img/card_image6.jpg</file>
+        <file>img/card_image7.jpg</file>
     </qresource>
     <qresource prefix="/json">
         <file>json/Anime_care_attributes.json</file>

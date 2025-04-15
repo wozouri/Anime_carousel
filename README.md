@@ -22,7 +22,7 @@
   - 支持动画完成后的回调函数
 
 
-#### qtWidget制作的轮播图
+#### 《QWidget轮播图》轮播图
 <img src="res/carousel_card.png" style="border-radius: 10px; height: 100px">
 
 #### 《QWidget按钮 》 波纹和波浪
@@ -34,5 +34,5 @@
 #### 《QWidget旋钮》 渐变旋钮控件
 <img src="res/gradient_knob.png" style="border-radius: 10px; height: 100px">
 
-#### 《QWidget旋钮》 渐变旋钮控件
+#### 《QWidget轮播图》椭圆无限滚动滑动轮播图
 <img src="res/Adaptive_Carousel.png" style="border-radius: 10px; height: 100px">

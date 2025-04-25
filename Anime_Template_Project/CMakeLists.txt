@@ -40,8 +40,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         Login_interface/other_login_buttons.h Login_interface/other_login_buttons.cpp
         Login_interface/transparent_transition_interface.h Login_interface/transparent_transition_interface.cpp
         Login_interface/hollow_button.h Login_interface/hollow_button.cpp
-        utility_class/timer_animation.h utility_class/timer_animation.cpp
-        utility_class/Dougu.h utility_class/Dougu.cpp
+        utility_class/timer_animation.h utility_class/timer_animation.cpp 
         dial_class/temperature_dial.h dial_class/temperature_dial.cpp
         utility_class/timer_animationgroup.h utility_class/timer_animationgroup.cpp
         dial_class/knob_page.h dial_class/knob_page.cpp

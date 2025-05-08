@@ -36,3 +36,13 @@
 
 #### 《QWidget轮播图》椭圆无限滚动滑动轮播图
 <img src="res/Adaptive_Carousel.png" style="border-radius: 10px; height: 100px">
+
+#### 《QWidget蟑螂须》拉链滑块控件
+<img src="res/蟑螂.png" style="border-radius: 10px; height: 100px">
+
+#### 《QWidget拟态化按钮》
+<img src="res/拟态化按钮.png" style="border-radius: 10px; height: 100px">
+
+#### 《QWidget交融动画按钮》
+<img src="res/液态.png" style="border-radius: 10px; height: 100px">
+

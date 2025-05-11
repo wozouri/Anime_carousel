@@ -46,3 +46,5 @@
 #### 《QWidget交融动画按钮》
 <img src="res/液态.png" style="border-radius: 10px; height: 100px">
 
+#### 《QWidget流动渐变字》
+<img src="res/Flowing_Gradient_Font.png" style="border-radius: 10px; height: 100px">

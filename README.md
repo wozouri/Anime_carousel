@@ -50,4 +50,4 @@
 <img src="res/Flowing_Gradient_Font.png" style="border-radius: 10px; height: 100px">
 
 #### 《QWidget像素过渡》
-<img src="res/PixelTransition" style="border-radius: 10px; height: 100px">
+<img src="res/PixelTransition.png" style="border-radius: 10px; height: 100px">

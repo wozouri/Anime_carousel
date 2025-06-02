@@ -40,10 +40,10 @@
 #### 《QWidget蟑螂须》拉链滑块控件
 <img src="res/蟑螂.png" style="border-radius: 10px; height: 100px">
 
-#### 《QWidget拟态化按钮》
+#### 《QWidget拟态化按钮》- Mimic_Button文件
 <img src="res/拟态化按钮.png" style="border-radius: 10px; height: 100px">
 
-#### 《QWidget交融动画按钮》
+#### 《QWidget交融动画按钮》- Liquid文件
 <img src="res/液态.png" style="border-radius: 10px; height: 100px">
 
 #### 《QWidget流动渐变字》

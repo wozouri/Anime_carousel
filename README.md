@@ -37,10 +37,9 @@
 
  <hr>
 <div>
-  <h2>《QWidget登录页面 》 登录注册效果
+  <h2>《QWidget登录页面 》 登录注册效果</h2>
   <img src="res/Responsive_form.png" style="border-radius: 10px; height: 100px">
   <h5>Login_interface文件<h5>
-
 </div>
 
  <hr>

@@ -74,3 +74,4 @@
 #### 《QWidget线条动画》
 <img src="res/Generative_Lines.png" style="border-radius: 10px; height: 100px">
 ***Generative_Lines***
+ <hr>

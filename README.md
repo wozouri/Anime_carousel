@@ -28,17 +28,17 @@
  <hr>
 #### 《QWidget按钮 》 波纹和波浪
 <img src="res/2_btn.png" style="border-radius: 10px; height: 100px">
-# button_class文件
+***button_class文件
 
  <hr>
 #### 《QWidget登录页面 》 登录注册效果
 <img src="res/Responsive_form.png" style="border-radius: 10px; height: 100px">
-***Login_interface***
+***Login_interface
 
  <hr>
 #### 《QWidget旋钮》 渐变旋钮控件 
 <img src="res/gradient_knob.png" style="border-radius: 10px; height: 100px">
-***dial_class文件***
+***dial_class文件
 
  <hr>
 #### 《QWidget轮播图》椭圆无限滚动滑动轮播图

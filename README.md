@@ -24,11 +24,13 @@
 
 #### 《QWidget轮播图》轮播图
 <img src="res/carousel_card.png" style="border-radius: 10px; height: 100px">
- 
+
+ <hr>
 
 #### 《QWidget按钮 》 波纹和波浪
 <img src="res/2_btn.png" style="border-radius: 10px; height: 100px">
 ***button_class文件***
+ <hr>
 
 #### 《QWidget登录页面 》 登录注册效果
 <img src="res/Responsive_form.png" style="border-radius: 10px; height: 100px">

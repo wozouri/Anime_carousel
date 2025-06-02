@@ -21,49 +21,56 @@
   - 定义动画的执行顺序（顺序、并行）
   - 支持动画完成后的回调函数
 
-
+ <hr>
 #### 《QWidget轮播图》轮播图
 <img src="res/carousel_card.png" style="border-radius: 10px; height: 100px">
 
  <hr>
-
 #### 《QWidget按钮 》 波纹和波浪
 <img src="res/2_btn.png" style="border-radius: 10px; height: 100px">
-***button_class文件***
- <hr>
+# button_class文件
 
+ <hr>
 #### 《QWidget登录页面 》 登录注册效果
 <img src="res/Responsive_form.png" style="border-radius: 10px; height: 100px">
 ***Login_interface***
 
+ <hr>
 #### 《QWidget旋钮》 渐变旋钮控件 
 <img src="res/gradient_knob.png" style="border-radius: 10px; height: 100px">
 ***dial_class文件***
 
+ <hr>
 #### 《QWidget轮播图》椭圆无限滚动滑动轮播图
 <img src="res/Adaptive_Carousel.png" style="border-radius: 10px; height: 100px">
 ***Adaptive_Carousel***
 
+ <hr>
 #### 《QWidget蟑螂须》拉链滑块控件
 <img src="res/蟑螂.png" style="border-radius: 10px; height: 100px">
 ***Zipper_Slider***
 
+ <hr>
 #### 《QWidget拟态化按钮》
 <img src="res/拟态化按钮.png" style="border-radius: 10px; height: 100px">
 ***Mimic_Button文件***
 
+ <hr>
 #### 《QWidget交融动画按钮》
 <img src="res/液态.png" style="border-radius: 10px; height: 100px">
 ***Liquid文件***
 
+ <hr>
 #### 《QWidget流动渐变字》
 <img src="res/Flowing_Gradient_Font.png" style="border-radius: 10px; height: 100px">
 ***Flowing_Gradient_Font***
 
+ <hr>
 #### 《QWidget像素过渡》
 <img src="res/PixelTransition.png" style="border-radius: 10px; height: 100px">
 ***PixelTransition***
 
+ <hr>
 #### 《QWidget线条动画》
 <img src="res/Generative_Lines.png" style="border-radius: 10px; height: 100px">
 ***Generative_Lines***

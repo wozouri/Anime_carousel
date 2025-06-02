@@ -3,7 +3,7 @@
 </div>
 
 
-### 动画类描述
+### 动画类描述 - utility_class文件
 
 #### `Timer_animation` 类
 `Timer_animation` 类用于执行动画效果。
@@ -25,13 +25,14 @@
 #### 《QWidget轮播图》轮播图
 <img src="res/carousel_card.png" style="border-radius: 10px; height: 100px">
 
-#### 《QWidget按钮 》 波纹和波浪
+#### 《QWidget按钮 》 波纹和波浪 -button_class文件
 <img src="res/2_btn.png" style="border-radius: 10px; height: 100px">
 
 #### 《QWidget登录页面 》 登录注册效果
 <img src="res/Responsive_form.png" style="border-radius: 10px; height: 100px">
 
-#### 《QWidget旋钮》 渐变旋钮控件
+#### 《QWidget旋钮》 渐变旋钮控件 
+***dial_class文件***
 <img src="res/gradient_knob.png" style="border-radius: 10px; height: 100px">
 
 #### 《QWidget轮播图》椭圆无限滚动滑动轮播图

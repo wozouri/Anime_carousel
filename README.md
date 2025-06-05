@@ -22,6 +22,12 @@
   - 支持动画完成后的回调函数
 
  <hr>
+ <div>
+  <h2>《QWidget波》</h2>
+  <img src="res/Wave.png" style="border-radius: 10px; height: 100px">
+  <h5>Wave文件<h5>
+</div>
+<hr>
 <div>
   <h2>《QWidget轮播图》轮播图</h2>
   <img src="res/carousel_card.png" style="border-radius: 10px; height: 100px">

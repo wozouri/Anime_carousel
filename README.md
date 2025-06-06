@@ -112,3 +112,9 @@
   <h5>Point_Wave文件<h5>
 </div>
 <hr>
+<div>
+  <h2>《QWidget故障文本》</h2>
+  <img src="res/Glitch_Text.png" style="border-radius: 10px; height: 100px">
+  <h5>Glitch_Text文件<h5>
+</div>
+<hr>

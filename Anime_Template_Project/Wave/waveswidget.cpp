@@ -7,7 +7,6 @@ WavesWidget::WavesWidget(QWidget *parent)
     : QWidget(parent),
     animationTimer(new QTimer(this))
 {
-    qDebug() << " 输出调试信息";
     config.lineColor = Qt::white;
     config.waveSpeedX = 0.02;
     config.waveSpeedY = 0.01;
@@ -37,13 +36,11 @@ WavesWidget::WavesWidget(QWidget *parent)
 
     timeElapsed.start();
 
-    qDebug() << "已加载";
 }
 
 WavesWidget::~WavesWidget()
 {
     delete noiseGenerator;
-    qDebug() << "已卸载";
 }
 
 void WavesWidget::paintEvent(QPaintEvent *event)

@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/1191a358-3d0d-4650-a86b-848cf6475e4b)<div align="center">
+<div align="center">
   <h1>Anime_Template</h1>
 </div>
 

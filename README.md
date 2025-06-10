@@ -1,4 +1,4 @@
-<div align="center">
+![image](https://github.com/user-attachments/assets/1191a358-3d0d-4650-a86b-848cf6475e4b)<div align="center">
   <h1>Anime_Template</h1>
 </div>
 
@@ -116,5 +116,11 @@
   <h2>《QWidget故障文本》</h2>
   <img src="res/Glitch_Text.png" style="border-radius: 10px; height: 100px">
   <h5>Glitch_Text文件<h5>
+</div>
+<hr>
+<div>
+  <h2>《QWidget物理文本》物理模拟</h2>
+  <img src="res/Physical_Text.png" style="border-radius: 10px; height: 100px">
+  <h5>Physical_Text文件<h5>
 </div>
 <hr>

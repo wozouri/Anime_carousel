@@ -124,3 +124,9 @@
   <h5>Physical_Text文件<h5>
 </div>
 <hr>
+<div>
+  <h2>《QWidget文本动画》 翻转弹性</h2>
+  <img src="res/SplitText.png" style="border-radius: 10px; height: 100px">
+  <h5>SplitText文件<h5>
+</div>
+<hr>

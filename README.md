@@ -130,3 +130,9 @@
   <h5>SplitText文件<h5>
 </div>
 <hr>
+<div>
+  <h2>《QWidget压力方块》 压力方块</h2>
+  <img src="res/Pressure_Block.png" style="border-radius: 10px; height: 100px">
+  <h5>Pressure_Block文件<h5>
+</div>
+<hr>

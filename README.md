@@ -136,3 +136,10 @@
   <h5>Pressure_Block文件<h5>
 </div>
 <hr>
+<div>
+  <h2>《QWidget模糊文本》模糊文本</h2>
+  <img src="res/Blur_Text.png" style="border-radius: 10px; height: 100px">
+  <h5>Blur_Text文件<h5>
+</div>
+<hr>
+

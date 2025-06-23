@@ -20,7 +20,13 @@
   - 添加多个动画到动画组
   - 定义动画的执行顺序（顺序、并行）
   - 支持动画完成后的回调函数
-
+  - 
+<hr>
+<div>
+  <h2>《QWidget--分形》迭代型分形们</h2>
+  <img src="res/FractalWidget.png" style="border-radius: 10px; height: 100px">
+  <h5>FractalWidget文件<h5>
+</div>
  <hr>
  <div>
   <h2>《QWidget波》</h2>

@@ -1,4 +1,7 @@
-## Anime_Template - QWidget 动画与控件精选
+<div align="center">
+  <h1>Anime_Template</h1>
+</div>
+
 
 这是一个集合了各种 QWidget 动画与控件的模板列表，展示了从分形艺术到交互式按钮等多种炫酷效果。
 

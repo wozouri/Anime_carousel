@@ -12,7 +12,7 @@
 | 《QWidget按钮 》 波纹和波浪 | ![](res/2_btn.png) | 按钮点击时带有波纹或波浪动画效果。 | button_class |
 | 《QWidget登录页面 》 登录注册效果 | ![](res/Responsive_form.png) | 响应式登录注册页面，可能包含动画效果。 | Login_interface |
 | 《QWidget旋钮》 渐变旋钮控件 | ![](res/gradient_knob.png) | 一个带有渐变色彩的自定义旋钮控件。 | dial_class |
-| 《QWidget轮播图》椭圆无限滚动滑动轮播图 | ![](res/Adaptive_Carousel.png) | 高级轮播图，实现椭圆轨迹的无限滚动。 | Adaptive_Carousel |
+| 《QWidget轮播图》椭圆无限滚动滑动轮播图 | ![](res/Adaptive_Carousel.png) | 高级轮播图，实现椭圆轨迹的无限滚动。 | AdaptiQve_Carousel |
 | 《QWidget蟑螂须》拉链滑块控件 | ![](res/蟑螂.png) | 独特设计的拉链式滑块控件。 | Zipper_Slider |
 | 《QWidget拟态化按钮》 | ![](res/拟态化按钮.png) | 具有拟态设计风格的按钮。 | Mimic_Button |
 | 《QWidget交融动画按钮》 | ![](res/液态.png) | 按钮点击或交互时呈现液态交融动画。 | Liquid |

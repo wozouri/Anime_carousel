@@ -16,7 +16,7 @@
 | 《QWidget交互波》 | <img src="res/Wave.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 展示波的交互。 | `Wave` | [bilibili小部件演示](https://www.bilibili.com/video/BV1kETHzNERE) |
 | 《QWidget轮播图》轮播图 | <img src="res/carousel_card.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 主显示展开其余收缩的轮播图。 | `Carousel_card` | [bilibili小部件演示](https://www.bilibili.com/video/BV1ksZdYjE3w) |
 | 《QWidget按钮 》 波纹和波浪 | <img src="res/2_btn.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 按钮点击时带有波纹或波浪动画效果。 | `button_class` | [bilibili小部件演示](https://www.bilibili.com/video/BV12fdFYZEsk) |
-| 《QWidget登录页面 》 登录注册效果 | <img src="res/Responsive_form.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 仿html响应式登录注册页面。 | `Login_interface` | [bilibili小部件演示](https://www.bilibili.com/video/BV18FdjYVEBN) |
+| 《QWidget登录页面 》 登录注册效果 | <img src="res/Responsive_form.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 仿html/css登录注册页面。 | `Login_interface` | [bilibili小部件演示](https://www.bilibili.com/video/BV18FdjYVEBN) |
 | 《QWidget旋钮》 渐变旋钮控件 | <img src="res/gradient_knob.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 一个带有渐变色彩的自定义旋钮控件。 | `dial_class` | [bilibili小部件演示](https://www.bilibili.com/video/BV1dTdSY2Ef1) |
 | 《QWidget轮播图》椭圆无限滚动滑动轮播图 | <img src="res/Adaptive_Carousel.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 高级轮播图，实现椭圆轨迹的无限滚动。 | `Adaptive_Carousel` | [bilibili小部件演示](https://www.bilibili.com/video/BV1AXonY7EPz) |
 | 《QWidget蟑螂须》拉链滑块控件 | <img src="res/蟑螂.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 广东双马尾控件。 | `Zipper_Slider` | [bilibili小部件演示](https://www.bilibili.com/video/BV1DWLbzWEjd) |

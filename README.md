@@ -1,3 +1,73 @@
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anime_Template 项目展示</title>
+<style>
+/* 全局样式 */
+body {
+font-family: Arial, sans-serif;
+line-height: 1.6;
+margin: 0;
+padding: 20px;
+background-color: #f4f4f4;
+color: #333;
+}
+/* 主内容容器 */
+/* main-content 将包裹所有 visible 内容 */
+.main-content {
+max-width: 960px; /* 最大宽度 */
+margin: 0 auto; /* 居中显示 */
+background: #fff; /* 背景色 */
+padding: 20px; /* 内边距 */
+border-radius: 8px; /* 圆角 */
+box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* 阴影 */
+}
+/* 头部区域 */
+.header {
+text-align: center;
+margin-bottom: 30px;
+}
+.header h1 {
+color: #333;
+font-size: 2.5em;
+}
+/* 项目项 */
+.project-item {
+display: flex;
+align-items: center;
+padding: 20px 0;
+border-bottom: 1px solid #eee;
+}
+/* 最后一个项目没有底部边框 */
+.project-item:last-child {
+border-bottom: none;
+}
+/* 项目图片样式 */
+.project-item img {
+border-radius: 10px;
+height: 100px;
+width: auto;
+margin-right: 20px;
+object-fit: cover;
+box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+/* 项目内容区 */
+.project-content h2 {
+margin-top: 0;
+margin-bottom: 10px;
+color: #0056b3;
+font-size: 1.8em;
+}
+.project-content h5 {
+margin: 0;
+color: #666;
+font-size: 1em;
+font-weight: normal;
+}
+</style>
+</head>
+<body>
+
 <div class="main-content">
 <div class="header">
 <h1>Anime_Template</h1>
@@ -154,3 +224,4 @@
 <h5>Blur_Text文件</h5>
 </div>
 </div>
+</div> </body>

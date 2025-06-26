@@ -1,11 +1,12 @@
 <div align="center">
+    <img src="res/GQmst7takAMVmoS.png" alt="PromptX Logo" width="120" height="120"/>
   <h1>Anime_Template</h1>
+  <p>这是一个集合了各种 QWidget 控件的模板，展示了从分形到交互式波等多种炫酷效果，和基础的控件。</p>
+  <p>这是我日后制作属于我自己动漫相关软件的基石。</p>
 </div>
 
 <br>
 <br>
-<div> 这是一个集合了各种 QWidget 控件的模板，展示了从分形到交互式波等多种炫酷效果，和基础的控件。 </div>
-<div> 这是我日后制作属于我自己动漫相关软件的基石。</div>
 <br>
 <br>
 

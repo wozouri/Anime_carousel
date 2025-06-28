@@ -29,3 +29,4 @@
 | 《QWidget压力方块》 压力方块 | <img src="res/Pressure_Block.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 模拟压力的方块效果。 | `Pressure_Block` | [bilibili演示](https://www.bilibili.com/video/BV1VSN4zaEWK) |
 | 《QWidget模糊文本》模糊文本 | <img src="res/Blur_Text.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 文字具有模糊效果，可用于过渡或强调。 | `Blur_Text` | [bilibili演示](https://www.bilibili.com/video/BV1prKNzHExz) |
 | 《QWidget二叉花树》 二叉花树 | <img src="res/TreeScene.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 二叉树的形成和节点上花的形成，花的凋落 | `Blur_Text` | [bilibili演示](https://www.bilibili.com/video/BV1Q7KZzmEAw) |
+| 《QWidget手风琴》 | <img src="res/Accordion.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 手风琴 | `Accordion` | [bilibili演示](https://www.bilibili.com/video/BV1zFK2zhEfY) |

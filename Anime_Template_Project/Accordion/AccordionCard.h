@@ -39,9 +39,9 @@ private:
     QLabel *m_label;
     qreal m_currentStretch;
     QPropertyAnimation *m_stretchAnimation;
-    QPixmap m_originalImage; // 存储原始图片
-    QPixmap m_cachedScaledImage; // 缓存缩放后的图片
-    QSize m_cachedImageSize; // 缓存缩放图片时的目标尺寸，用于判断是否需要重新缩放
+    QPixmap m_originalImage;
+    QPixmap m_cachedScaledImage;
+    QSize m_cachedImageSize; 
 };
 
 #endif // ACCORDIONCARD_H

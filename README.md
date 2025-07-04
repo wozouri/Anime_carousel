@@ -32,5 +32,4 @@
 | 《QWidget二叉花树》 二叉花树 | <img src="res/TreeScene.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 二叉树的形成和节点上花的形成，花的凋落 | `TreeScene` | [bilibili演示](https://www.bilibili.com/video/BV1Q7KZzmEAw) |
 | 《QWidget手风琴》 | <img src="res/Accordion.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 手风琴 | `Accordion` | [bilibili演示](https://www.bilibili.com/video/BV1zFK2zhEfY) |
 | 《QWidget蜂巢网格》 | <img src="res/Honeycomb_Grid.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 蜂巢网格 | `Honeycomb_Grid` | [bilibili演示](https://www.bilibili.com/video/BV1iw3uzAEee) |
-| 《QWidget星空连接》 | <img src="res/Star_Sky_Connection.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 星空链接 | `Star_Sky_Connection
-` | [bilibili演示](https://www.bilibili.com/video/BV1iw3uzAEee) |
+| 《QWidget星空连接》 | <img src="res/Star_Sky_Connection.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 星空链接 | `Star_Sky_Connection` | [bilibili演示](https://www.bilibili.com/video/BV1iw3uzAEee) |

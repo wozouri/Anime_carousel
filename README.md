@@ -31,3 +31,4 @@
 | 《QWidget二叉花树》 二叉花树 | <img src="res/TreeScene.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 二叉树的形成和节点上花的形成，花的凋落 | `TreeScene` | [bilibili演示](https://www.bilibili.com/video/BV1Q7KZzmEAw) |
 | 《QWidget手风琴》 | <img src="res/Accordion.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 手风琴 | `Accordion` | [bilibili演示](https://www.bilibili.com/video/BV1zFK2zhEfY) |
 | 《QWidget 眼球克苏鲁》 | <img src="res/Eye_of_Cthulhu.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 眼球克苏鲁，掉落的血滴 ，狰狞的触手，聚焦的瞳孔，跟随鼠标的眼球。 | `Eye_of_Cthulhu` | [bilibili演示](https://www.bilibili.com/video/BV11MgSz4EL7) |
+| 《QWidget蜂巢网格》 | <img src="res/Honeycomb_Grid.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 蜂巢网格 | `Honeycomb_Grid` | [bilibili演示](https://www.bilibili.com/video/BV1iw3uzAEee) |

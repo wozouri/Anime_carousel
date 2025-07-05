@@ -1,0 +1,138 @@
+# Qt相关文件
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.moc
+*.moc.cpp
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+*.qmlc
+*.jsc
+Makefile*
+*build-*
+*.so
+*.so.*
+*.dll
+*.dylib
+
+# Qt Creator相关
+*.autosave
+*.orig
+*.rej
+*.tmp
+*.bak
+*.swp
+*~
+.#*
+\#*#
+*.user
+*.pro.user.*
+CMakeLists.txt.user*
+
+# qmake生成的文件
+Makefile
+*.Debug
+*.Release
+debug/
+release/
+*.pdb
+*.ilk
+*.meta
+*.tlog
+*.log
+*.idb
+*.obj
+*.pch
+*.exe
+*.exp
+*.lib
+
+# Visual Studio相关 (如果使用VS)
+*.vcxproj.user
+*.vcxproj.filters
+*.sdf
+*.opensdf
+*.suo
+*.sln.docstates
+*.VC.db
+*.VC.VC.opendb
+
+# CMake相关
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+
+# 构建目录
+build/
+build-*/
+*-build/
+build_*
+out/
+bin/
+lib/
+Debug/
+Release/
+x64/
+x86/
+
+# 部署相关
+*.zip
+*.tar.gz
+*.app
+*.dmg
+*.deb
+*.rpm
+*.msi
+
+# 临时文件
+*.tmp
+*.temp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE相关
+.vscode/
+.idea/
+*.sublime-*
+*.kate-swp
+
+# 文档生成
+doc/html/
+doc/latex/
+*.qch
+*.qhc
+
+# 测试相关
+*.gcov
+*.gcda
+*.gcno
+coverage/
+test_results/
+
+# 系统文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+
+# 其他常见忽略
+*.log
+*.pid
+*.seed
+*.pid.lock
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log* 
+

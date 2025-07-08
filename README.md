@@ -33,5 +33,5 @@
 | 《QWidget二叉花树》 二叉花树 | <img src="res/TreeScene.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 二叉树的形成和节点上花的形成，花的凋落 | `TreeScene` | [bilibili演示](https://www.bilibili.com/video/BV1Q7KZzmEAw) |
 | 《QWidget手风琴》 | <img src="res/Accordion.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 手风琴 | `Accordion` | [bilibili演示](https://www.bilibili.com/video/BV1zFK2zhEfY) |
 | 《QWidget蜂巢网格》 | <img src="res/Honeycomb_Grid.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 蜂巢网格 | `Honeycomb_Grid` | [bilibili演示](https://www.bilibili.com/video/BV1iw3uzAEee) |
-| 《QWidget字母故障》 | <img src="res/Letter_Glitch.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | Letter_Glitch | `Honeycomb_Grid` | [bilibili演示](https://www.bilibili.com/video/BV1kcGHzLEDq) |
-| 《QWidget磁力线》 | <img src="res/Magnet_Lines.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | Magnet_Lines | `Honeycomb_Grid` | [bilibili演示](https://www.bilibili.com/video/BV1JTGHz3EAQ) |
+| 《QWidget字母故障》 | <img src="res/Letter_Glitch.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 字母故障 | `Letter_Glitch` | [bilibili演示](https://www.bilibili.com/video/BV1kcGHzLEDq) |
+| 《QWidget磁力线》 | <img src="res/Magnet_Lines.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 磁力线 | `Magnet_Lines` | [bilibili演示](https://www.bilibili.com/video/BV1JTGHz3EAQ) |

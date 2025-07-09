@@ -1,15 +1,15 @@
 #include <QApplication>
 #include <QMainWindow>
-
 #include "AccordionCard.h"
 #include "AccordionWidget.h"
+
 
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
 
     QMainWindow window;
-    window.setWindowTitle("手风琴");
+    window.setWindowTitle("xxxx");
     window.setMinimumSize(800, 300);
 
     AccordionWidget* accordion = new AccordionWidget(&window);

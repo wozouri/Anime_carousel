@@ -16,6 +16,9 @@ set(PROJECT_SOURCES
         main.cpp
         AccordionCard.cpp
         AccordionCard.h
+        accordionwidget.h
+        accordionwidget.cpp
+        img.qrc
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

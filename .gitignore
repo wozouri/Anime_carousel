@@ -136,3 +136,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log* 
 
+*.db-shm
+*.ipch
+*.db-wal
+/Anime_Template_Project/Accordion/.vs/Accordion/v17
+/Anime_Template_Project/Accordion/.vs/Accordion/FileContentIndex
+*.json
+/Anime_Template_Project/Accordion/.vs

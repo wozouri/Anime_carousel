@@ -60,11 +60,20 @@ void AccordionCard::setTargetStretch(qreal targetStretch)
     m_stretchAnimation->start();
 }
 
+#if QT_VERSION_MAJOR >= 6
 void AccordionCard::enterEvent(QEnterEvent *event)
 {
     emit hovered(this);
     QWidget::enterEvent(event);
 }
+#elif QT_VERSION_MAJOR >= 5
+void AccordionCard::enterEvent(QEvent* event)
+{
+    emit hovered(this);
+    QWidget::enterEvent(event);
+}
+#endif
+
 
 void AccordionCard::leaveEvent(QEvent *event)
 {

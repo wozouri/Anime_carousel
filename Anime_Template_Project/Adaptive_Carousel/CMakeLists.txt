@@ -30,6 +30,7 @@ set(HEADERS
 
 # 资源文件（如果存在）
 set(RESOURCES
+    img.qrc
     # resources.qrc  # 取消注释如果你有资源文件
 )
 

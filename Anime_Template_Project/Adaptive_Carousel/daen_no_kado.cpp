@@ -84,14 +84,15 @@ void Daen_no_Kado::animations()
     animation4->setEndValue(0);
     animation4->setEasingCurve(QEasingCurve::Linear);
 }
+
 void Daen_no_Kado::Get_Image()
 {
+
     qreal x = 0;
     for (int i = 1; i < 99; i++)
     {
-        QPixmap pixmap(QString("://img/card_image%1.jpg").arg(i));
+        QPixmap pixmap(QString("://img/card_image (%1).jpg").arg(i));
         if (pixmap.isNull()) return;
-
         Gazou_Shuu.append(pixmap);
     }
 }

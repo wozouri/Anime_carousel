@@ -1,4 +1,6 @@
 #include "daen_no_kado.h"
+#include <qdebug.h>
+#include <qmath.h>
 
 Daen_no_Kado::Daen_no_Kado(QWidget *parent)
     : QWidget{parent}
@@ -114,8 +116,8 @@ void Daen_no_Kado::Kiso_Deta_Kouchiku()
     Progress_Bar_Step = qreal(recta.width()) / qreal(recta.height()) * 1.6;
     m_Expand_Collapse_Height = recta.height() * 0.98;
 
-    qDebug() << "进度条步长" << Progress_Bar_Step;
-    qDebug() << "展开高度" << m_Expand_Collapse_Height;
+    qDebug() << "" << Progress_Bar_Step; //进度条步长
+    qDebug() << "" << m_Expand_Collapse_Height;// 展开高度
 
     Kado_Suu.clear();
     this->Gazou_wo_nabebae_ru();
@@ -137,6 +139,7 @@ void Daen_no_Kado::Gazou_wo_nabebae_ru()
         x += leftBound * 0.6888;
     }
 
+    if(Kado_Suu.size()>3)
     kankaku = Kado_Suu[3].second - Kado_Suu[3].first;
 }
 void Daen_no_Kado::resizeEvent(QResizeEvent* event)
@@ -271,7 +274,21 @@ void Daen_no_Kado::Byouga_Ryouiki(qreal& Gazou_Zen_XJiku, qreal& Gazou_Go_XJiku,
     QTransform transform;
     QPointF center = targetRect.center();
     transform.translate(center.x(), center.y());
+    // Qt版本兼容的旋转代码
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    // Qt 6.5+ 支持3参数版本
     transform.rotate(calculateRectRotation(Gazou_Zen_XJiku), Qt::YAxis, 2048.0);
+#elif QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    // Qt5 和 Qt6.0-6.4 支持2参数版本
+    transform.rotate(calculateRectRotation(Gazou_Zen_XJiku), Qt::YAxis);
+#else
+    // 更老版本只支持Z轴旋转，需要其他方案
+    qreal rotationY = calculateRectRotation(Gazou_Zen_XJiku);
+    // 模拟Y轴旋转的透视效果
+    qreal scaleX = qCos(qDegreesToRadians(rotationY));
+    if (qAbs(scaleX) < 0.1) scaleX = scaleX < 0 ? -0.1 : 0.1;
+    transform.scale(scaleX, 1.0);
+#endif
     transform.translate(-center.x(), -center.y());
 
     painter.setWorldTransform(transform);
@@ -288,6 +305,7 @@ void Daen_no_Kado::Byouga_Ryouiki(qreal& Gazou_Zen_XJiku, qreal& Gazou_Go_XJiku,
     painter.setPen(semiTransparent);
     painter.drawText(Kari_no_saizu, Qt::AlignCenter, QString("夹心假面"));
 }
+
 void Daen_no_Kado::draw_text()
 {
     QPainter painter(this);
@@ -384,6 +402,8 @@ void Daen_no_Kado::Progress_Bar_Data_Update()
 }
 void Daen_no_Kado::koushin_suru()
 {
+    if (Kado_Suu.isEmpty())return;
+
     for (auto& pair : Kado_Suu)
     {
         if (Execution_Direction == false)

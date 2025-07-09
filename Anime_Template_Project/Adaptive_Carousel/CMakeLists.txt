@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.16)
-
 project(DaenNoKado VERSION 1.0.0 LANGUAGES CXX)
 
 # 设置C++标准
@@ -50,8 +49,8 @@ else()
     )
 endif()
 
-# 链接Qt库
-target_link_libraries(DaenNoKado 
+# 链接Qt库 - 使用关键字格式
+target_link_libraries(DaenNoKado PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Gui

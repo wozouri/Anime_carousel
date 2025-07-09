@@ -13,6 +13,7 @@
 | 《QWidget--分形》迭代型分形们 | <img src="res/FractalWidget.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 演示迭代型分形的生成与展示。 | `FractalWidget` | [bilibili演示](https://www.bilibili.com/video/BV12aKtzdErC) |
 | 《QWidget交融动画按钮》 | <img src="res/液态.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 液态交融动画。 | `Liquid` | [bilibili演示](https://www.bilibili.com/video/BV1w25PzBEq3) |
 | 《QWidget 眼球克苏鲁》 | <img src="res/Eye_of_Cthulhu.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 眼球克苏鲁，掉落的血滴 ，狰狞的触手，聚焦的瞳孔，跟随鼠标的眼球。 | `Eye_of_Cthulhu` | [bilibili演示](https://www.bilibili.com/video/BV11MgSz4EL7) |
+| 《QWidget星空连接》 | <img src="res/Star_Sky_Connection.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 星空链接 | `Star_Sky_Connection` | [bilibili演示](https://www.bilibili.com/video/BV1iw3uzAEee) |
 | 《QWidget轮播图》轮播图 | <img src="res/carousel_card.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 主显示展开其余收缩的轮播图。 | `Carousel_card` | [bilibili演示](https://www.bilibili.com/video/BV1ksZdYjE3w) |
 | 《QWidget轮播图》椭圆无限滚动滑动轮播图 | <img src="res/Adaptive_Carousel.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 高级轮播图，实现椭圆轨迹的无限滚动。 | `Adaptive_Carousel` | [bilibili演示](https://www.bilibili.com/video/BV1AXonY7EPz) |
 | 《QWidget按钮 》 波纹和波浪 | <img src="res/2_btn.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 按钮点击时带有波纹或波浪动画效果。 | `button_class` | [bilibili演示](https://www.bilibili.com/video/BV12fdFYZEsk) |
@@ -32,4 +33,5 @@
 | 《QWidget二叉花树》 二叉花树 | <img src="res/TreeScene.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 二叉树的形成和节点上花的形成，花的凋落 | `TreeScene` | [bilibili演示](https://www.bilibili.com/video/BV1Q7KZzmEAw) |
 | 《QWidget手风琴》 | <img src="res/Accordion.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 手风琴 | `Accordion` | [bilibili演示](https://www.bilibili.com/video/BV1zFK2zhEfY) |
 | 《QWidget蜂巢网格》 | <img src="res/Honeycomb_Grid.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 蜂巢网格 | `Honeycomb_Grid` | [bilibili演示](https://www.bilibili.com/video/BV1iw3uzAEee) |
-| 《QWidget星空连接》 | <img src="res/Star_Sky_Connection.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 星空链接 | `Star_Sky_Connection` | [bilibili演示](https://www.bilibili.com/video/BV1iw3uzAEee) |
+| 《QWidget字母故障》 | <img src="res/Letter_Glitch.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 字母故障 | `Letter_Glitch` | [bilibili演示](https://www.bilibili.com/video/BV1kcGHzLEDq) |
+| 《QWidget磁力线》 | <img src="res/Magnet_Lines.png" style="height: 100px; object-fit: cover; border-radius: 5px;"> | 磁力线 | `Magnet_Lines` | [bilibili演示](https://www.bilibili.com/video/BV1JTGHz3EAQ) |

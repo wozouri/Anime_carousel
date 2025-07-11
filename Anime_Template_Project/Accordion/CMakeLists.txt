@@ -1,74 +1,94 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(untitled4 VERSION 0.1 LANGUAGES CXX)
+project(Accordion VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# 查找Qt库
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
+# 定义项目源文件（统一文件列表，避免重复）
 set(PROJECT_SOURCES
-        main.cpp
-        AccordionCard.cpp
-        AccordionCard.h
-        accordionwidget.h
-        accordionwidget.cpp
-        img.qrc
+    AccordionCard.cpp
+    AccordionCard.h
+    accordionwidget.h
+    accordionwidget.cpp
+    AccordionWidget.h
+    AccordionWidget.cpp
 )
 
-if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(untitled4
-        MANUAL_FINALIZATION
-        ${PROJECT_SOURCES}
-        AccordionWidget.h AccordionWidget.cpp
-        img.qrc
-    )
-# Define target properties for Android with Qt 6 as:
-#    set_property(TARGET untitled4 APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
-#                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
-# For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
-else()
-    if(ANDROID)
-        add_library(untitled4 SHARED
-            ${PROJECT_SOURCES}
+# 定义资源文件
+set(PROJECT_RESOURCES
+    img.qrc
+)
+
+# 创建库（而不是可执行文件，因为这是子项目）
+add_library(Accordion STATIC
+    ${PROJECT_SOURCES}
+    ${PROJECT_RESOURCES}
+)
+
+# 链接Qt库
+target_link_libraries(Accordion PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+
+# 设置目标属性
+set_target_properties(Accordion PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+)
+
+# 如果需要创建独立的可执行文件用于测试（可选）
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+    if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+        qt_add_executable(Accordion_demo
+            MANUAL_FINALIZATION
+            main.cpp
         )
-# Define properties for Android with Qt 5 after find_package() calls as:
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else()
-        add_executable(untitled4
-            ${PROJECT_SOURCES}
-        )
+        add_executable(Accordion_demo main.cpp  img.qrc)
+    endif()
+    
+    # 链接库和Qt
+    target_link_libraries(Accordion_demo PRIVATE 
+        Accordion 
+        Qt${QT_VERSION_MAJOR}::Widgets
+    )
+    
+    # 设置可执行文件属性
+    set_target_properties(Accordion_demo PROPERTIES
+        MACOSX_BUNDLE TRUE
+        WIN32_EXECUTABLE TRUE
+    )
+    
+    # Qt6需要finalize
+    if(QT_VERSION_MAJOR EQUAL 6)
+        qt_finalize_executable(Accordion_demo)
     endif()
 endif()
 
-target_link_libraries(untitled4 PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
-
-# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
-# If you are developing for iOS or macOS you should consider setting an
-# explicit, fixed bundle identifier manually though.
-if(${QT_VERSION} VERSION_LESS 6.1.0)
-  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.untitled4)
-endif()
-set_target_properties(untitled4 PROPERTIES
-    ${BUNDLE_ID_OPTION}
-    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-    MACOSX_BUNDLE TRUE
-    WIN32_EXECUTABLE TRUE
+# 导出包含目录，供父项目使用
+target_include_directories(Accordion PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 
+# 安装规则（可选）
 include(GNUInstallDirs)
-install(TARGETS untitled4
-    BUNDLE DESTINATION .
+install(TARGETS Accordion
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(untitled4)
-endif()
+# 安装头文件
+install(FILES
+    AccordionCard.h
+    accordionwidget.h
+    AccordionWidget.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Accordion
+)

@@ -1,4 +1,5 @@
 #include "SplitText.h"
+#include <qdebug.h>
 
 SplitText::SplitText(QWidget* parent)
     : QMainWindow(parent)

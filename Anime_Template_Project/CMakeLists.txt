@@ -86,3 +86,5 @@
 add_subdirectory(Accordion)
 add_subdirectory(Adaptive_Carousel)
 add_subdirectory(Blur_Text)
+add_subdirectory(Honeycomb_Grid)
+add_subdirectory(SplitText)

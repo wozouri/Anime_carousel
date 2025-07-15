@@ -5,12 +5,14 @@ Widget::Widget(QWidget *parent)
 {
     this->resize(1111, 1111);
 
-    xxxx1 = new Depressed_Button(":/new/prefix1/img/twitter.png", this);
+    //xxxx1 = new Depressed_Button(":/new/prefix1/img/twitter.png", this);
+    xxxx1 = new Depressed_Button(":/new/prefix1/img/1 (7).png", this);
     connect(xxxx1, &Depressed_Button::Animation_Trigger_State, this, &Widget::Animation_1);
     xxxx1->move(255, 455);
     xxxx1->show();
 
-    xxxx2 = new Depressed_Button(":/new/prefix1/img/微信.png", this);
+    //xxxx2 = new Depressed_Button(":/new/prefix1/img/微信.png", this);
+    xxxx2 = new Depressed_Button(":/new/prefix1/img/1 (2).png", this);
     connect(xxxx2, &Depressed_Button::Animation_Trigger_State, this, &Widget::Animation_2);
     xxxx2->move(655, 455);
     xxxx2->show();

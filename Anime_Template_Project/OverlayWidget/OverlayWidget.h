@@ -39,11 +39,13 @@ protected:
     void resizeEvent(QResizeEvent* event) override;
     void enterEvent(QEvent* event) override;  // 新增：鼠标进入事件
     void leaveEvent(QEvent* event) override;       // 新增：鼠标离开事件
+    void wheelEvent(QWheelEvent* event) override;
     bool eventFilter(QObject* obj, QEvent* event) override;
 
 private slots:
     void changePenColor();
     void changePenWidth(int width);
+    void changeFontSize(int size);
     void toggleTextMode(bool enabled);
     void toggleEraserMode(bool enabled);  // 新增：切换橡皮擦模式
     void changeEraserSize(int size);      // 新增：改变橡皮擦大小
@@ -141,6 +143,7 @@ private:
     // 文字相关
     QVector<TextItem> m_textItems;
     QLineEdit* m_textEdit;
+    int m_fontSize;             // 字体大小
     bool m_textMode;
     QPoint m_currentTextPosition;
     int m_editingTextIndex;
@@ -159,7 +162,8 @@ private:
     QWidget* m_toolbarContent;     // 工具栏内容区域
     QPushButton* m_collapseButton; // 收起/展开按钮
     QPushButton* m_colorButton;
-    QSpinBox* m_widthSpinBox;
+    QSpinBox* m_widthSpinBox;      // 画笔大小选择
+    QSpinBox* m_fontSizeSpinBox;      // 画笔大小选择
     QCheckBox* m_textModeCheckBox;
     QCheckBox* m_eraserModeCheckBox;  // 新增：橡皮擦模式复选框
     QSpinBox* m_eraserSizeSpinBox;    // 新增：橡皮擦大小选择

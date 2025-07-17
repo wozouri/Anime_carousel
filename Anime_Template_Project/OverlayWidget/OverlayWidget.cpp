@@ -15,6 +15,7 @@ OverlayWidget::OverlayWidget(QWidget* targetWidget, QWidget* parent)
     , m_penWidth(3)
     , m_drawing(false)
     , m_textEdit(nullptr)
+    , m_fontSize(12)
     , m_textMode(false)
     , m_editingTextIndex(-1)
     , m_eraserMode(false)      // 初始化橡皮擦模式
@@ -89,14 +90,14 @@ void OverlayWidget::setupUI()
     headerLayout->setContentsMargins(8, 4, 4, 4);
 
     // 标题标签
-    QLabel* titleLabel = new QLabel("标注工具", m_toolbarHeader);
+    QLabel* titleLabel = new QLabel(tr("标注工具"), m_toolbarHeader);
     titleLabel->setStyleSheet("color: white; font-size: 12px; font-weight: bold;");
     titleLabel->setCursor(Qt::SizeAllCursor);
 
     // 收起/展开按钮
     m_collapseButton = new QPushButton("−", m_toolbarHeader);
     m_collapseButton->setFixedSize(20, 20);
-    m_collapseButton->setToolTip("收起工具栏");
+    m_collapseButton->setToolTip(tr("收起工具栏"));
     connect(m_collapseButton, &QPushButton::clicked, this, &OverlayWidget::toggleToolbarCollapse);
 
     headerLayout->addWidget(titleLabel);
@@ -124,13 +125,13 @@ void OverlayWidget::setupUI()
     drawingToolsLayout->setSpacing(5);
 
     // 颜色选择按钮
-    m_colorButton = new QPushButton("颜色", m_toolbarContent);
+    m_colorButton = new QPushButton(tr("颜色"), m_toolbarContent);
     m_colorButton->setFixedSize(50, 28);
     m_colorButton->setStyleSheet(QString("background-color: %1; color: white;").arg(m_penColor.name()));
     connect(m_colorButton, &QPushButton::clicked, this, &OverlayWidget::changePenColor);
 
     // 画笔宽度
-    QLabel* widthLabel = new QLabel("宽度:", m_toolbarContent);
+    QLabel* widthLabel = new QLabel(tr("宽度:"), m_toolbarContent);
     m_widthSpinBox = new QSpinBox(m_toolbarContent);
     m_widthSpinBox->setRange(1, 20);
     m_widthSpinBox->setValue(m_penWidth);
@@ -139,17 +140,26 @@ void OverlayWidget::setupUI()
         this, &OverlayWidget::changePenWidth);
 
     // 文字模式复选框
-    m_textModeCheckBox = new QCheckBox("文字", m_toolbarContent);
+    m_textModeCheckBox = new QCheckBox(tr("文字"), m_toolbarContent);
     connect(m_textModeCheckBox, &QCheckBox::toggled, this, &OverlayWidget::toggleTextMode);
 
+    // 文字字体大小
+    m_fontSizeSpinBox = new QSpinBox(m_toolbarContent);
+    m_fontSizeSpinBox->setRange(1, 20);
+    m_fontSizeSpinBox->setValue(m_fontSize);
+    m_fontSizeSpinBox->setFixedSize(60, 28);
+    m_fontSizeSpinBox->setEnabled(false);  // 初始禁用
+    connect(m_fontSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
+        this, &OverlayWidget::changeFontSize);
+        
     // 橡皮擦模式复选框
-    m_eraserModeCheckBox = new QCheckBox("橡皮擦", m_toolbarContent);
+    m_eraserModeCheckBox = new QCheckBox(tr("橡皮擦"), m_toolbarContent);
     connect(m_eraserModeCheckBox, &QCheckBox::toggled, this, &OverlayWidget::toggleEraserMode);
 
     // 橡皮擦大小
-    QLabel* eraserSizeLabel = new QLabel("擦除:", m_toolbarContent);
+    QLabel* eraserSizeLabel = new QLabel(tr("擦除:"), m_toolbarContent);
     m_eraserSizeSpinBox = new QSpinBox(m_toolbarContent);
-    m_eraserSizeSpinBox->setRange(5, 50);
+    m_eraserSizeSpinBox->setRange(20, 50);
     m_eraserSizeSpinBox->setValue(m_eraserSize);
     m_eraserSizeSpinBox->setFixedSize(60, 28);
     m_eraserSizeSpinBox->setEnabled(false);  // 初始禁用
@@ -160,6 +170,7 @@ void OverlayWidget::setupUI()
     drawingToolsLayout->addWidget(widthLabel);
     drawingToolsLayout->addWidget(m_widthSpinBox);
     drawingToolsLayout->addWidget(m_textModeCheckBox);
+    drawingToolsLayout->addWidget(m_fontSizeSpinBox);
     drawingToolsLayout->addWidget(m_eraserModeCheckBox);
     drawingToolsLayout->addWidget(eraserSizeLabel);
     drawingToolsLayout->addWidget(m_eraserSizeSpinBox);
@@ -170,29 +181,29 @@ void OverlayWidget::setupUI()
     actionButtonsLayout->setSpacing(5);
 
     // 撤销按钮
-    m_undoButton = new QPushButton("撤销", m_toolbarContent);
+    m_undoButton = new QPushButton(tr("撤销"), m_toolbarContent);
     m_undoButton->setFixedSize(50, 28);
     m_undoButton->setEnabled(false);
     connect(m_undoButton, &QPushButton::clicked, this, &OverlayWidget::undoLastAction);
 
     // 重做按钮
-    m_redoButton = new QPushButton("重做", m_toolbarContent);
+    m_redoButton = new QPushButton(tr("重做"), m_toolbarContent);
     m_redoButton->setFixedSize(50, 28);
     m_redoButton->setEnabled(false);
     connect(m_redoButton, &QPushButton::clicked, this, &OverlayWidget::redoLastAction);
 
     // 清除按钮
-    m_clearButton = new QPushButton("清除", m_toolbarContent);
+    m_clearButton = new QPushButton(tr("清除"), m_toolbarContent);
     m_clearButton->setFixedSize(50, 28);
     connect(m_clearButton, &QPushButton::clicked, this, &OverlayWidget::clearCanvas);
 
     // 保存按钮
-    m_saveButton = new QPushButton("保存", m_toolbarContent);
+    m_saveButton = new QPushButton(tr("保存"), m_toolbarContent);
     m_saveButton->setFixedSize(50, 28);
     connect(m_saveButton, &QPushButton::clicked, this, &OverlayWidget::saveImage);
 
     // 完成按钮
-    m_finishButton = new QPushButton("完成", m_toolbarContent);
+    m_finishButton = new QPushButton(tr("完成"), m_toolbarContent);
     m_finishButton->setFixedSize(50, 28);
     connect(m_finishButton, &QPushButton::clicked, this, &OverlayWidget::finishEditing);
 
@@ -368,7 +379,7 @@ void OverlayWidget::drawEraserCursor(QPainter& painter)
     if (!hasMouseTracking()) return;
     if (!rect().contains(m_currentMousePos)) return;
 
-    qDebug() << m_currentMousePos;
+    //qDebug() << m_currentMousePos;
 
     // 绘制橡皮擦预览圆形，以鼠标点为圆心
     painter.setPen(QPen(Qt::gray, 1, Qt::DashLine));
@@ -559,6 +570,37 @@ void OverlayWidget::leaveEvent(QEvent* event)
             update();  // 重绘以隐藏橡皮擦光标
         }
     QWidget::leaveEvent(event);
+}
+
+void OverlayWidget::wheelEvent(QWheelEvent* event)
+{
+    // 获取滚动的方向和数量
+    int delta = event->angleDelta().y();
+
+    if (m_eraserMode) {
+        m_eraserSize += delta/40;
+        m_eraserSize = qBound(20,m_eraserSize, 50);
+        m_eraserSizeSpinBox->setValue(m_eraserSize);
+    }
+    else if (m_textMode) {
+        m_fontSize += delta / 120;
+        m_fontSize = qBound(5, m_fontSize, 20);
+        m_fontSizeSpinBox->setValue(m_fontSize);
+        if (m_textEdit) { // m_textEdit在点击遮罩后才会出现
+            m_textEdit->setStyleSheet(
+                QString("QLineEdit { background-color: white; border: 2px solid blue; padding: 5px; font-size: %1px; }").arg(m_fontSize)
+            );
+        }
+
+    }
+    else {
+        m_penWidth += delta/120;
+        m_penWidth = qBound(1, m_penWidth, 20);
+        m_widthSpinBox->setValue(m_penWidth);
+    }
+
+
+    QWidget::wheelEvent(event);
 }
 
 void OverlayWidget::drawPaths(QPainter& painter)
@@ -769,7 +811,7 @@ void OverlayWidget::keyPressEvent(QKeyEvent* event)
         // Ctrl+Y 重做（另一种常用快捷键）
         redoLastAction();
     }
-
+     
     QWidget::keyPressEvent(event);
 }
 
@@ -792,7 +834,7 @@ void OverlayWidget::addTextAt(const QPoint& position)
 
     m_textEdit = new QLineEdit(this);
     m_textEdit->setStyleSheet(
-        "QLineEdit { background-color: white; border: 2px solid blue; padding: 5px; font-size: 12px; }"
+        QString("QLineEdit { background-color: white; border: 2px solid blue; padding: 5px; font-size: %1px; }").arg(m_fontSize)
     );
     m_textEdit->move(position);
     m_textEdit->resize(200, 25);
@@ -885,7 +927,7 @@ void OverlayWidget::finishTextInput()
                 item.position = m_currentTextPosition;
                 item.text = text;
                 item.color = m_penColor;
-                item.font = QFont("Microsoft YaHei", 12);
+                item.font = QFont("Microsoft YaHei", m_fontSize);
                 m_textItems.append(item);
 
                 // 保存添加操作的撤销信息
@@ -903,7 +945,7 @@ void OverlayWidget::finishTextInput()
 
 void OverlayWidget::changePenColor()
 {
-    QColor newColor = QColorDialog::getColor(m_penColor, this, "选择颜色");
+    QColor newColor = QColorDialog::getColor(m_penColor, this, tr("选择颜色"));
     if (newColor.isValid()) {
         m_penColor = newColor;
         m_colorButton->setStyleSheet(QString("background-color: %1; color: white;").arg(m_penColor.name()));
@@ -915,6 +957,11 @@ void OverlayWidget::changePenWidth(int width)
     m_penWidth = width;
 }
 
+void OverlayWidget::changeFontSize(int size)
+{
+    m_fontSize = size;
+}
+
 void OverlayWidget::toggleTextMode(bool enabled)
 {
     // 切换模式时先完成当前的文字输入
@@ -923,6 +970,7 @@ void OverlayWidget::toggleTextMode(bool enabled)
     }
 
     m_textMode = enabled;
+    m_fontSizeSpinBox->setEnabled(enabled);
 
     // 如果启用文字模式，禁用橡皮擦模式
     if (enabled && m_eraserMode) {
@@ -1175,13 +1223,13 @@ void OverlayWidget::updateToolbarLayout()
         // 收起状态：隐藏内容区域
         m_toolbarContent->hide();
         m_collapseButton->setText("+");
-        m_collapseButton->setToolTip("展开工具栏");
+        m_collapseButton->setToolTip(tr("展开工具栏"));
     }
     else {
         // 展开状态：显示内容区域
         m_toolbarContent->show();
         m_collapseButton->setText("−");
-        m_collapseButton->setToolTip("收起工具栏");
+        m_collapseButton->setToolTip(tr("收起工具栏"));
     }
 
     // 调整工具栏大小
@@ -1239,10 +1287,10 @@ void OverlayWidget::saveImage()
         drawTexts(painter);
 
         if (pixmap.save(fileName)) {
-            QMessageBox::information(this, "保存成功", "标注图片已保存到: " + fileName);
+            QMessageBox::information(this, tr("保存成功"), tr("标注图片已保存到: ") + fileName);
         }
         else {
-            QMessageBox::warning(this, "保存失败", "无法保存图片");
+            QMessageBox::warning(this, tr("保存失败"), tr("无法保存图片"));
         }
     }
 }

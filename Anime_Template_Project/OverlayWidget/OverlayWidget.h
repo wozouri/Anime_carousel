@@ -37,28 +37,30 @@ protected:
     void keyPressEvent(QKeyEvent* event) override;
     void mouseDoubleClickEvent(QMouseEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
+    void enterEvent(QEvent* event) override;  // 新增：鼠标进入事件
+    void leaveEvent(QEvent* event) override;       // 新增：鼠标离开事件
     bool eventFilter(QObject* obj, QEvent* event) override;
 
 private slots:
     void changePenColor();
     void changePenWidth(int width);
     void toggleTextMode(bool enabled);
+    void toggleEraserMode(bool enabled);  // 新增：切换橡皮擦模式
+    void changeEraserSize(int size);      // 新增：改变橡皮擦大小
     void clearCanvas();
     void saveImage();
     void finishEditing();
     void undoLastAction();  // 撤销上次操作
     void redoLastAction();  // 重做上次操作
-    //void toggleToolbarCollapse();  // 切换工具栏收起状态
 
 private:
     enum ActionType {
         ACTION_DRAW_PATH,     // 绘制路径
         ACTION_ADD_TEXT,      // 添加文字
         ACTION_EDIT_TEXT,     // 编辑文字
-        ACTION_DELETE_TEXT    // 删除文字
+        ACTION_DELETE_TEXT,   // 删除文字
+        ACTION_ERASE          // 新增：橡皮擦操作
     };
-
-
 
     struct DrawPoint {
         QPoint point;
@@ -73,6 +75,14 @@ private:
         QFont font;
     };
 
+    // 新增：橡皮擦删除的数据结构
+    struct ErasedData {
+        QVector<int> erasedPathIndices;           // 被删除的路径索引
+        QVector<QVector<DrawPoint>> erasedPaths;  // 被删除的路径数据
+        QVector<int> erasedTextIndices;           // 被删除的文字索引
+        QVector<TextItem> erasedTexts;            // 被删除的文字数据
+    };
+
     struct UndoAction {
         ActionType type;
         QVector<DrawPoint> pathData;  // 路径数据（用于绘制撤销）
@@ -82,6 +92,7 @@ private:
         QString newText;              // 新文字内容（用于重做）
         QColor oldColor;              // 原文字颜色（用于编辑撤销）
         QColor newColor;              // 新文字颜色（用于重做）
+        ErasedData erasedData;        // 新增：橡皮擦删除的数据
     };
 
     void setupUI();
@@ -91,15 +102,23 @@ private:
     void removeEventFilters();
     void drawPaths(QPainter& painter);
     void drawTexts(QPainter& painter);
+    void drawEraserCursor(QPainter& painter);  // 新增：绘制橡皮擦光标
     void addTextAt(const QPoint& position);
     void editTextAt(int index, const QPoint& position);
     void finishTextInput();
+
+    // 新增：橡皮擦相关函数
+    void performErase(const QPoint& position);
+    bool isPointInEraserRange(const QPoint& point, const QPoint& eraserCenter);
+    bool isTextInEraserRange(const TextItem& textItem, const QPoint& eraserCenter);
+    QCursor createEraserCursor();  // 新增：创建橡皮擦光标
 
     // 撤销/重做相关函数
     void saveAction(ActionType type, const QVector<DrawPoint>& pathData = QVector<DrawPoint>(),
         const TextItem& textData = TextItem(), int textIndex = -1,
         const QString& oldText = QString(), const QString& newText = QString(),
-        const QColor& oldColor = QColor(), const QColor& newColor = QColor());
+        const QColor& oldColor = QColor(), const QColor& newColor = QColor(),
+        const ErasedData& erasedData = ErasedData());  // 新增橡皮擦数据参数
     void updateUndoRedoButtons();  // 更新撤销/重做按钮状态
     void clearRedoStack();         // 清空重做栈
 
@@ -126,6 +145,14 @@ private:
     QPoint m_currentTextPosition;
     int m_editingTextIndex;
 
+    // 新增：橡皮擦相关
+    bool m_eraserMode;            // 橡皮擦模式
+    int m_eraserSize;             // 橡皮擦大小
+    bool m_erasing;               // 是否正在擦除
+    QPoint m_lastErasePos;        // 上次擦除位置（用于连续擦除）
+    QPoint m_currentMousePos;     // 当前鼠标位置（用于橡皮擦光标）
+    ErasedData m_currentErasedData; // 当前擦除操作的数据
+
     // 工具栏
     QWidget* m_toolbar;
     QWidget* m_toolbarHeader;      // 工具栏标题栏（拖动区域）
@@ -134,11 +161,13 @@ private:
     QPushButton* m_colorButton;
     QSpinBox* m_widthSpinBox;
     QCheckBox* m_textModeCheckBox;
+    QCheckBox* m_eraserModeCheckBox;  // 新增：橡皮擦模式复选框
+    QSpinBox* m_eraserSizeSpinBox;    // 新增：橡皮擦大小选择
     QPushButton* m_clearButton;
     QPushButton* m_saveButton;
     QPushButton* m_finishButton;
     QPushButton* m_undoButton;
-    QPushButton* m_redoButton;  // 新增：重做按钮
+    QPushButton* m_redoButton;
 
     // 工具栏状态
     bool m_toolbarCollapsed;       // 工具栏是否收起

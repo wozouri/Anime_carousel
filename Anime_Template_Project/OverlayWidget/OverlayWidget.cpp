@@ -6,6 +6,7 @@
 #include <QMessageBox>
 #include <QEvent>
 #include <QTimer>
+#include <qDebug>
 
 OverlayWidget::OverlayWidget(QWidget* targetWidget, QWidget* parent)
     : QWidget(parent)
@@ -16,6 +17,10 @@ OverlayWidget::OverlayWidget(QWidget* targetWidget, QWidget* parent)
     , m_textEdit(nullptr)
     , m_textMode(false)
     , m_editingTextIndex(-1)
+    , m_eraserMode(false)      // 初始化橡皮擦模式
+    , m_eraserSize(20)         // 初始化橡皮擦大小
+    , m_erasing(false)         // 初始化擦除状态
+    , m_currentMousePos(0, 0)  // 初始化鼠标位置
     , m_toolbarCollapsed(false)
     , m_draggingToolbar(false)
 {
@@ -109,9 +114,14 @@ void OverlayWidget::setupUI()
         "QLabel { color: white; font-size: 12px; }"
     );
 
-    QHBoxLayout* contentLayout = new QHBoxLayout(m_toolbarContent);
-    contentLayout->setSpacing(5);
+    // 创建两行布局
+    QVBoxLayout* contentLayout = new QVBoxLayout(m_toolbarContent);
+    contentLayout->setSpacing(3);
     contentLayout->setContentsMargins(8, 6, 8, 6);
+
+    // 第一行：绘制工具
+    QHBoxLayout* drawingToolsLayout = new QHBoxLayout();
+    drawingToolsLayout->setSpacing(5);
 
     // 颜色选择按钮
     m_colorButton = new QPushButton("颜色", m_toolbarContent);
@@ -131,6 +141,33 @@ void OverlayWidget::setupUI()
     // 文字模式复选框
     m_textModeCheckBox = new QCheckBox("文字", m_toolbarContent);
     connect(m_textModeCheckBox, &QCheckBox::toggled, this, &OverlayWidget::toggleTextMode);
+
+    // 橡皮擦模式复选框
+    m_eraserModeCheckBox = new QCheckBox("橡皮擦", m_toolbarContent);
+    connect(m_eraserModeCheckBox, &QCheckBox::toggled, this, &OverlayWidget::toggleEraserMode);
+
+    // 橡皮擦大小
+    QLabel* eraserSizeLabel = new QLabel("擦除:", m_toolbarContent);
+    m_eraserSizeSpinBox = new QSpinBox(m_toolbarContent);
+    m_eraserSizeSpinBox->setRange(5, 50);
+    m_eraserSizeSpinBox->setValue(m_eraserSize);
+    m_eraserSizeSpinBox->setFixedSize(60, 28);
+    m_eraserSizeSpinBox->setEnabled(false);  // 初始禁用
+    connect(m_eraserSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
+        this, &OverlayWidget::changeEraserSize);
+
+    drawingToolsLayout->addWidget(m_colorButton);
+    drawingToolsLayout->addWidget(widthLabel);
+    drawingToolsLayout->addWidget(m_widthSpinBox);
+    drawingToolsLayout->addWidget(m_textModeCheckBox);
+    drawingToolsLayout->addWidget(m_eraserModeCheckBox);
+    drawingToolsLayout->addWidget(eraserSizeLabel);
+    drawingToolsLayout->addWidget(m_eraserSizeSpinBox);
+    drawingToolsLayout->addStretch();
+
+    // 第二行：操作按钮
+    QHBoxLayout* actionButtonsLayout = new QHBoxLayout();
+    actionButtonsLayout->setSpacing(5);
 
     // 撤销按钮
     m_undoButton = new QPushButton("撤销", m_toolbarContent);
@@ -159,17 +196,16 @@ void OverlayWidget::setupUI()
     m_finishButton->setFixedSize(50, 28);
     connect(m_finishButton, &QPushButton::clicked, this, &OverlayWidget::finishEditing);
 
+    actionButtonsLayout->addWidget(m_undoButton);
+    actionButtonsLayout->addWidget(m_redoButton);
+    actionButtonsLayout->addStretch();
+    actionButtonsLayout->addWidget(m_clearButton);
+    actionButtonsLayout->addWidget(m_saveButton);
+    actionButtonsLayout->addWidget(m_finishButton);
+
     // 添加到内容布局
-    contentLayout->addWidget(m_colorButton);
-    contentLayout->addWidget(widthLabel);
-    contentLayout->addWidget(m_widthSpinBox);
-    contentLayout->addWidget(m_textModeCheckBox);
-    contentLayout->addWidget(m_undoButton);
-    contentLayout->addWidget(m_redoButton);  // 添加重做按钮
-    contentLayout->addStretch();
-    contentLayout->addWidget(m_clearButton);
-    contentLayout->addWidget(m_saveButton);
-    contentLayout->addWidget(m_finishButton);
+    contentLayout->addLayout(drawingToolsLayout);
+    contentLayout->addLayout(actionButtonsLayout);
 
     // 添加到主工具栏布局
     toolbarLayout->addWidget(m_toolbarHeader);
@@ -178,6 +214,168 @@ void OverlayWidget::setupUI()
     // 定位工具栏到初始位置
     m_toolbar->move(10, 10);
     updateToolbarLayout();
+}
+
+void OverlayWidget::toggleEraserMode(bool enabled)
+{
+    // 切换到橡皮擦模式时，先完成当前的文字输入
+    if (m_textEdit && enabled) {
+        finishTextInput();
+    }
+
+    m_eraserMode = enabled;
+    m_eraserSizeSpinBox->setEnabled(enabled);
+
+    // 如果启用橡皮擦模式，禁用文字模式
+    if (enabled && m_textMode) {
+        m_textMode = false;
+        m_textModeCheckBox->setChecked(false);
+    }
+
+    // 设置鼠标光标和跟踪
+    if (enabled) {
+        setCursor(createEraserCursor());  // 使用自定义橡皮擦光标
+        setMouseTracking(true);  // 启用鼠标跟踪
+        m_currentMousePos = mapFromGlobal(QCursor::pos());
+    }
+    else {
+        setCursor(Qt::ArrowCursor);  // 恢复默认光标
+        setMouseTracking(false);  // 禁用鼠标跟踪
+    }
+
+    update();  // 重绘以显示/隐藏橡皮擦预览
+}
+
+void OverlayWidget::changeEraserSize(int size)
+{
+    m_eraserSize = size;
+    if (m_eraserMode) {
+        update();  // 重绘以显示新的橡皮擦预览大小
+    }
+}
+
+void OverlayWidget::performErase(const QPoint& position)
+{
+    bool hasErased = false;
+    ErasedData erasedData;
+
+    // 从后往前遍历路径，这样删除时不会影响索引
+    for (int i = m_paths.size() - 1; i >= 0; --i) {
+        const auto& path = m_paths[i];
+        bool pathErased = false;
+
+        // 检查路径中的每个点是否在橡皮擦范围内
+        for (const auto& point : path) {
+            if (isPointInEraserRange(point.point, position)) {
+                pathErased = true;
+                break;
+            }
+        }
+
+        if (pathErased) {
+            erasedData.erasedPathIndices.append(i);
+            erasedData.erasedPaths.append(m_paths[i]);
+            m_paths.removeAt(i);
+            hasErased = true;
+        }
+    }
+
+    // 从后往前遍历文字，这样删除时不会影响索引
+    for (int i = m_textItems.size() - 1; i >= 0; --i) {
+        const TextItem& textItem = m_textItems[i];
+
+        if (isTextInEraserRange(textItem, position)) {
+            erasedData.erasedTextIndices.append(i);
+            erasedData.erasedTexts.append(textItem);
+            m_textItems.removeAt(i);
+            hasErased = true;
+        }
+    }
+
+    // 如果有内容被擦除，累积到当前擦除数据中
+    if (hasErased) {
+        // 合并到当前擦除操作的数据中
+        m_currentErasedData.erasedPathIndices.append(erasedData.erasedPathIndices);
+        m_currentErasedData.erasedPaths.append(erasedData.erasedPaths);
+        m_currentErasedData.erasedTextIndices.append(erasedData.erasedTextIndices);
+        m_currentErasedData.erasedTexts.append(erasedData.erasedTexts);
+
+        update();
+    }
+}
+
+bool OverlayWidget::isPointInEraserRange(const QPoint& point, const QPoint& eraserCenter)
+{
+    int dx = point.x() - eraserCenter.x();
+    int dy = point.y() - eraserCenter.y();
+    int distance = dx * dx + dy * dy;
+    int radius = m_eraserSize / 2;
+    return distance <= radius * radius;
+}
+
+bool OverlayWidget::isTextInEraserRange(const TextItem& textItem, const QPoint& eraserCenter)
+{
+    QFontMetrics fm(textItem.font);
+    QRect textRect(textItem.position, fm.size(Qt::TextSingleLine, textItem.text));
+
+    // 检查文字矩形是否与橡皮擦圆形区域相交
+    int radius = m_eraserSize / 2;
+    QRect eraserRect(eraserCenter.x() - radius, eraserCenter.y() - radius,
+        m_eraserSize, m_eraserSize);
+
+    return textRect.intersects(eraserRect);
+}
+
+QCursor OverlayWidget::createEraserCursor()
+{
+    // 创建橡皮擦光标图标
+    int cursorSize = 8;  // 光标大小
+    QPixmap cursorPixmap(cursorSize, cursorSize);
+    cursorPixmap.fill(Qt::transparent);
+
+    QPainter painter(&cursorPixmap);
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    // 绘制橡皮擦图标
+    painter.setPen(QPen(Qt::black, 1));
+    painter.setBrush(QBrush(Qt::white));
+
+    // 绘制橡皮擦主体（矩形）
+    QRect eraserRect(0, 0, 8, 10);
+    painter.drawRoundedRect(eraserRect, 0, 0);
+
+    // 绘制橡皮擦上的金属部分
+    painter.setBrush(QBrush(Qt::lightGray));
+    QRect metalRect(0, 0, 8, 4);
+    painter.drawRoundedRect(metalRect, 0, 0);
+
+    // 绘制中心十字线指示精确位置
+    //painter.setPen(QPen(Qt::red, 1));
+    //painter.drawLine(15, 0, 17, 0);  // 上
+    //painter.drawLine(15, 31, 17, 31);  // 下
+    //painter.drawLine(0, 15, 0, 17);   // 左
+    //painter.drawLine(31, 15, 31, 17); // 右
+
+    // 创建光标，热点在中心
+    return QCursor(cursorPixmap, 0, 0);
+}
+
+void OverlayWidget::drawEraserCursor(QPainter& painter)
+{
+    if (!m_eraserMode) return;
+
+    // 只有当鼠标在widget范围内时才绘制预览圆形
+    if (!hasMouseTracking()) return;
+    if (!rect().contains(m_currentMousePos)) return;
+
+    qDebug() << m_currentMousePos;
+
+    // 绘制橡皮擦预览圆形，以鼠标点为圆心
+    painter.setPen(QPen(Qt::gray, 1, Qt::DashLine));
+    painter.setBrush(QBrush(QColor(0, 0, 0, 30)));  // 半透明红色填充
+
+    int radius = m_eraserSize / 2;
+    painter.drawEllipse(m_currentMousePos, radius, radius);
 }
 
 void OverlayWidget::showOverlay()
@@ -189,6 +387,13 @@ void OverlayWidget::showOverlay()
     raise();
     activateWindow();
     setFocus();
+
+    // 如果是橡皮擦模式，启用鼠标跟踪
+    if (m_eraserMode) {
+        setMouseTracking(true);
+        m_currentMousePos = mapFromGlobal(QCursor::pos());
+        update();
+    }
 }
 
 void OverlayWidget::hideOverlay()
@@ -274,37 +479,11 @@ void OverlayWidget::installEventFilters()
 
     // 监听目标widget的事件
     m_targetWidget->installEventFilter(this);
-
-    //// 监听目标widget的父窗口事件（如果有的话）
-    //QWidget* topLevel = m_targetWidget->window();
-    //if (topLevel && topLevel != m_targetWidget) {
-    //    topLevel->installEventFilter(this);
-    //}
-
-    //// 监听所有父widget的事件
-    //QWidget* parent = m_targetWidget->parentWidget();
-    //while (parent) {
-    //    parent->installEventFilter(this);
-    //    parent = parent->parentWidget();
-    //}
 }
 
 void OverlayWidget::removeEventFilters()
 {
     if (!m_targetWidget) return;
-
-    //m_targetWidget->removeEventFilter(this);
-
-    //QWidget* topLevel = m_targetWidget->window();
-    //if (topLevel && topLevel != m_targetWidget) {
-    //    topLevel->removeEventFilter(this);
-    //}
-
-    //QWidget* parent = m_targetWidget->parentWidget();
-    //while (parent) {
-    //    parent->removeEventFilter(this);
-    //    parent = parent->parentWidget();
-    //}
 }
 
 bool OverlayWidget::eventFilter(QObject* obj, QEvent* event)
@@ -312,11 +491,7 @@ bool OverlayWidget::eventFilter(QObject* obj, QEvent* event)
     if (!m_targetWidget) return QWidget::eventFilter(obj, event);
 
     // 监听目标widget或其父widget的几何变化
-    if (obj == m_targetWidget //||
-        //obj == m_targetWidget->window() ||
-        //obj == m_targetWidget->parentWidget()
-        ) {
-
+    if (obj == m_targetWidget) {
         switch (event->type()) {
         case QEvent::Resize:
         case QEvent::Move:
@@ -350,6 +525,9 @@ void OverlayWidget::paintEvent(QPaintEvent* event)
     // 绘制所有路径和文字
     drawPaths(painter);
     drawTexts(painter);
+
+    // 绘制橡皮擦光标
+    drawEraserCursor(painter);
 }
 
 void OverlayWidget::resizeEvent(QResizeEvent* event)
@@ -358,6 +536,29 @@ void OverlayWidget::resizeEvent(QResizeEvent* event)
 
     // 确保工具栏位置在新的尺寸范围内
     constrainToolbarPosition();
+}
+
+void OverlayWidget::enterEvent(QEvent* event)
+{
+    Q_UNUSED(event)
+        // 鼠标进入widget时，如果是橡皮擦模式则开始跟踪
+        if (m_eraserMode) {
+            setMouseTracking(true);
+            m_currentMousePos = mapFromGlobal(QCursor::pos());
+            update();
+        }
+    QWidget::enterEvent(event);
+}
+
+void OverlayWidget::leaveEvent(QEvent* event)
+{
+    Q_UNUSED(event)
+        // 鼠标离开widget时停止跟踪
+        if (m_eraserMode) {
+            setMouseTracking(false);
+            update();  // 重绘以隐藏橡皮擦光标
+        }
+    QWidget::leaveEvent(event);
 }
 
 void OverlayWidget::drawPaths(QPainter& painter)
@@ -407,6 +608,11 @@ void OverlayWidget::drawTexts(QPainter& painter)
 
 void OverlayWidget::mousePressEvent(QMouseEvent* event)
 {
+    // 更新鼠标位置
+    if (m_eraserMode) {
+        m_currentMousePos = event->pos();
+    }
+
     if (event->button() == Qt::LeftButton) {
         // 检查是否点击在工具栏标题栏上（开始拖动）
         if (m_toolbarHeader && m_toolbarHeader->geometry().translated(m_toolbar->pos()).contains(event->pos())) {
@@ -421,7 +627,18 @@ void OverlayWidget::mousePressEvent(QMouseEvent* event)
             return;
         }
 
-        if (m_textMode) {
+        if (m_eraserMode) {
+            // 橡皮擦模式
+            m_erasing = true;
+            m_lastErasePos = event->pos();
+
+            // 清空当前擦除数据
+            m_currentErasedData = ErasedData();
+
+            // 执行擦除
+            performErase(event->pos());
+        }
+        else if (m_textMode) {
             // 检查是否点击在已有文字上（可以编辑）
             bool clickedOnText = false;
             for (int i = m_textItems.size() - 1; i >= 0; --i) {
@@ -444,6 +661,7 @@ void OverlayWidget::mousePressEvent(QMouseEvent* event)
             }
         }
         else {
+            // 绘制模式
             m_drawing = true;
             m_currentPath.clear();
 
@@ -460,6 +678,12 @@ void OverlayWidget::mousePressEvent(QMouseEvent* event)
 
 void OverlayWidget::mouseMoveEvent(QMouseEvent* event)
 {
+    // 在橡皮擦模式下，始终更新鼠标位置
+    if (m_eraserMode) {
+        m_currentMousePos = event->pos();
+        update();  // 重绘以更新橡皮擦光标位置
+    }
+
     if (event->buttons() & Qt::LeftButton) {
         if (m_draggingToolbar) {
             // 拖动工具栏
@@ -469,7 +693,12 @@ void OverlayWidget::mouseMoveEvent(QMouseEvent* event)
             return;
         }
 
-        if (m_drawing) {
+        if (m_erasing) {
+            // 橡皮擦连续擦除
+            performErase(event->pos());
+            m_lastErasePos = event->pos();
+        }
+        else if (m_drawing) {
             DrawPoint point;
             point.point = event->pos();
             point.color = m_penColor;
@@ -491,7 +720,17 @@ void OverlayWidget::mouseReleaseEvent(QMouseEvent* event)
             return;
         }
 
-        if (m_drawing) {
+        if (m_erasing) {
+            // 结束擦除操作
+            m_erasing = false;
+
+            // 如果有内容被擦除，保存撤销信息
+            if (!m_currentErasedData.erasedPaths.isEmpty() || !m_currentErasedData.erasedTexts.isEmpty()) {
+                saveAction(ACTION_ERASE, QVector<DrawPoint>(), TextItem(), -1,
+                    QString(), QString(), QColor(), QColor(), m_currentErasedData);
+            }
+        }
+        else if (m_drawing) {
             m_drawing = false;
 
             if (!m_currentPath.isEmpty()) {
@@ -684,6 +923,14 @@ void OverlayWidget::toggleTextMode(bool enabled)
     }
 
     m_textMode = enabled;
+
+    // 如果启用文字模式，禁用橡皮擦模式
+    if (enabled && m_eraserMode) {
+        m_eraserMode = false;
+        m_eraserModeCheckBox->setChecked(false);
+        m_eraserSizeSpinBox->setEnabled(false);
+        setCursor(Qt::ArrowCursor);
+    }
 }
 
 void OverlayWidget::clearCanvas()
@@ -703,11 +950,11 @@ void OverlayWidget::clearCanvas()
     update();
 }
 
-
 void OverlayWidget::saveAction(ActionType type, const QVector<DrawPoint>& pathData,
     const TextItem& textData, int textIndex,
     const QString& oldText, const QString& newText,
-    const QColor& oldColor, const QColor& newColor)
+    const QColor& oldColor, const QColor& newColor,
+    const ErasedData& erasedData)
 {
     // 进行新操作时清空重做栈（历史分支改变）
     clearRedoStack();
@@ -721,6 +968,7 @@ void OverlayWidget::saveAction(ActionType type, const QVector<DrawPoint>& pathDa
     action.newText = newText;
     action.oldColor = oldColor;
     action.newColor = newColor;
+    action.erasedData = erasedData;
 
     m_undoStack.append(action);
 
@@ -791,6 +1039,41 @@ void OverlayWidget::undoLastAction()
             m_textItems.insert(lastAction.textIndex, lastAction.textData);
         }
         break;
+
+    case ACTION_ERASE:
+        // 撤销橡皮擦操作：恢复被擦除的内容
+    {
+        const ErasedData& erasedData = lastAction.erasedData;
+
+        // 恢复被擦除的路径（按原来的索引顺序）
+        for (int i = 0; i < erasedData.erasedPathIndices.size(); ++i) {
+            int originalIndex = erasedData.erasedPathIndices[i];
+            const auto& erasedPath = erasedData.erasedPaths[i];
+
+            // 插入到适当位置（需要考虑其他路径的变化）
+            if (originalIndex <= m_paths.size()) {
+                m_paths.insert(originalIndex, erasedPath);
+            }
+            else {
+                m_paths.append(erasedPath);
+            }
+        }
+
+        // 恢复被擦除的文字（按原来的索引顺序）
+        for (int i = 0; i < erasedData.erasedTextIndices.size(); ++i) {
+            int originalIndex = erasedData.erasedTextIndices[i];
+            const TextItem& erasedText = erasedData.erasedTexts[i];
+
+            // 插入到适当位置
+            if (originalIndex <= m_textItems.size()) {
+                m_textItems.insert(originalIndex, erasedText);
+            }
+            else {
+                m_textItems.append(erasedText);
+            }
+        }
+    }
+    break;
     }
 
     // 将撤销的操作放入重做栈
@@ -839,6 +1122,31 @@ void OverlayWidget::redoLastAction()
             m_textItems.removeAt(lastRedoAction.textIndex);
         }
         break;
+
+    case ACTION_ERASE:
+        // 重做橡皮擦操作：重新执行擦除
+    {
+        const ErasedData& erasedData = lastRedoAction.erasedData;
+
+        // 重新删除路径（从后往前删除以保持索引正确）
+        QVector<int> sortedPathIndices = erasedData.erasedPathIndices;
+        std::sort(sortedPathIndices.begin(), sortedPathIndices.end(), std::greater<int>());
+        for (int index : sortedPathIndices) {
+            if (index >= 0 && index < m_paths.size()) {
+                m_paths.removeAt(index);
+            }
+        }
+
+        // 重新删除文字（从后往前删除以保持索引正确）
+        QVector<int> sortedTextIndices = erasedData.erasedTextIndices;
+        std::sort(sortedTextIndices.begin(), sortedTextIndices.end(), std::greater<int>());
+        for (int index : sortedTextIndices) {
+            if (index >= 0 && index < m_textItems.size()) {
+                m_textItems.removeAt(index);
+            }
+        }
+    }
+    break;
     }
 
     // 将重做的操作放回撤销栈

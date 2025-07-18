@@ -6,7 +6,8 @@
 #include <QMessageBox>
 #include <QEvent>
 #include <QTimer>
-#include <qDebug>
+#include <QDebug>
+#include <algorithm>
 
 OverlayWidget::OverlayWidget(QWidget* targetWidget, QWidget* parent)
     : QWidget(parent)
@@ -18,19 +19,34 @@ OverlayWidget::OverlayWidget(QWidget* targetWidget, QWidget* parent)
     , m_fontSize(12)
     , m_textMode(false)
     , m_editingTextIndex(-1)
-    , m_eraserMode(false)      // 初始化橡皮擦模式
-    , m_eraserSize(20)         // 初始化橡皮擦大小
-    , m_erasing(false)         // 初始化擦除状态
-    , m_currentMousePos(0, 0)  // 初始化鼠标位置
+    , m_eraserMode(false)
+    , m_eraserSize(20)
+    , m_erasing(false)
+    , m_currentMousePos(0, 0)
     , m_toolbarCollapsed(false)
     , m_draggingToolbar(false)
+    , m_geometryUpdatePending(false)
+    , m_updateTimer(new QTimer(this))
+    , m_baseSizeInitialized(false)
+    , m_useRelativeCoordinates(true)
+    , m_hasEditingRelativeText(false)
+    , m_debugMode(false)
+    , m_useHighPrecision(false)
+    , m_rectCacheValid(false)
+    , m_updateCount(0)
 {
     if (!m_targetWidget) {
         qWarning("OverlayWidget: targetWidget cannot be null");
         return;
     }
 
-    // 记录初始大小
+    // 初始化定时器
+    m_updateTimer->setSingleShot(true);
+    m_updateTimer->setInterval(16); // 约60fps的更新频率
+    connect(m_updateTimer, &QTimer::timeout, this, &OverlayWidget::updateOverlayGeometry);
+
+    // 记录初始几何信息
+    m_lastTargetGeometry = m_targetWidget->geometry();
     m_lastTargetSize = m_targetWidget->size();
 
     // 设置窗口属性 - 透明遮罩
@@ -41,8 +57,11 @@ OverlayWidget::OverlayWidget(QWidget* targetWidget, QWidget* parent)
     // 设置焦点策略
     setFocusPolicy(Qt::StrongFocus);
 
+    // 初始化相对坐标系统
+    initializeRelativeSystem();
+
     setupUI();
-    updatePosition();
+    calculatePreciseGeometry();
 
     // 安装事件过滤器监听目标widget变化
     installEventFilters();
@@ -53,6 +72,11 @@ OverlayWidget::OverlayWidget(QWidget* targetWidget, QWidget* parent)
 
 OverlayWidget::~OverlayWidget()
 {
+    // 清理定时器
+    if (m_updateTimer) {
+        m_updateTimer->stop();
+    }
+
     // 清理事件过滤器
     removeEventFilters();
 
@@ -62,6 +86,411 @@ OverlayWidget::~OverlayWidget()
         m_textEdit = nullptr;
     }
 }
+
+// ============================================================================
+// 相对坐标系统实现
+// ============================================================================
+
+void OverlayWidget::initializeRelativeSystem()
+{
+    if (!m_targetWidget) return;
+
+    m_baseSize = m_targetWidget->size();
+    if (m_baseSize.isEmpty()) {
+        m_baseSize = QSize(800, 600); // 默认基准尺寸
+    }
+    m_baseSizeInitialized = true;
+
+    if (m_debugMode) {
+        qDebug() << "Relative coordinate system initialized with base size:" << m_baseSize;
+    }
+}
+
+void OverlayWidget::convertToRelativeCoordinates()
+{
+    if (!m_baseSizeInitialized || m_baseSize.isEmpty()) return;
+
+    // 转换现有的绝对坐标路径为相对坐标
+    m_relativePaths.clear();
+    for (const auto& path : m_paths) {
+        QVector<RelativePoint> relativePath;
+        for (const auto& point : path) {
+            relativePath.append(RelativePoint::fromAbsolute(
+                point.point, m_baseSize, point.color, point.width));
+        }
+        m_relativePaths.append(relativePath);
+    }
+
+    // 转换当前路径
+    m_currentRelativePath.clear();
+    for (const auto& point : m_currentPath) {
+        m_currentRelativePath.append(RelativePoint::fromAbsolute(
+            point.point, m_baseSize, point.color, point.width));
+    }
+
+    // 转换文字项
+    m_relativeTextItems.clear();
+    for (const auto& textItem : m_textItems) {
+        m_relativeTextItems.append(RelativeTextItem::fromAbsolute(textItem, m_baseSize));
+    }
+
+    if (m_debugMode) {
+        qDebug() << "Converted to relative coordinates:" << m_relativePaths.size()
+            << "paths," << m_relativeTextItems.size() << "texts";
+    }
+}
+
+void OverlayWidget::updateAbsoluteFromRelative()
+{
+    if (!m_targetWidget) return;
+
+    QSize currentSize = m_targetWidget->size();
+    if (currentSize.isEmpty()) return;
+
+    // 从相对坐标重建绝对坐标路径
+    m_paths.clear();
+    for (const auto& relativePath : m_relativePaths) {
+        QVector<DrawPoint> absolutePath;
+        for (const auto& relativePoint : relativePath) {
+            DrawPoint point;
+            point.point = relativePoint.toAbsolute(currentSize);
+            point.color = relativePoint.color;
+            point.width = relativePoint.width;
+            absolutePath.append(point);
+        }
+        m_paths.append(absolutePath);
+    }
+
+    // 重建当前路径
+    m_currentPath.clear();
+    for (const auto& relativePoint : m_currentRelativePath) {
+        DrawPoint point;
+        point.point = relativePoint.toAbsolute(currentSize);
+        point.color = relativePoint.color;
+        point.width = relativePoint.width;
+        m_currentPath.append(point);
+    }
+
+    // 重建文字项
+    m_textItems.clear();
+    for (const auto& relativeItem : m_relativeTextItems) {
+        m_textItems.append(relativeItem.toAbsolute(currentSize));
+    }
+
+    // 更新正在编辑的文字位置
+    if (m_textEdit && m_hasEditingRelativeText) {
+        QPoint newPos = m_currentEditingRelativeText.toAbsolutePosition(currentSize);
+        m_currentTextPosition = newPos;
+        m_textEdit->move(newPos);
+
+        // 更新字体大小
+        QFont newFont = m_currentEditingRelativeText.toAbsoluteFont(currentSize);
+        QString styleSheet = QString(
+            "QLineEdit { background-color: white; border: 2px solid blue; "
+            "padding: 5px; font-size: %1px; }").arg(newFont.pointSize());
+        m_textEdit->setStyleSheet(styleSheet);
+    }
+
+    if (m_debugMode) {
+        qDebug() << "Updated absolute coordinates for size:" << currentSize;
+    }
+}
+
+void OverlayWidget::syncRelativeData()
+{
+    if (!m_useRelativeCoordinates) return;
+
+    // 确保相对坐标数据与绝对坐标数据同步
+    if (!m_baseSizeInitialized) {
+        initializeRelativeSystem();
+    }
+    convertToRelativeCoordinates();
+}
+
+OverlayWidget::RelativePoint OverlayWidget::pointToRelative(const QPoint& point) const
+{
+    if (!m_targetWidget) return RelativePoint();
+
+    QSize currentSize = m_targetWidget->size();
+    return RelativePoint::fromAbsolute(point, currentSize, m_penColor, m_penWidth);
+}
+
+QPoint OverlayWidget::relativeToPoint(const RelativePoint& relativePoint) const
+{
+    if (!m_targetWidget) return QPoint();
+
+    QSize currentSize = m_targetWidget->size();
+    return relativePoint.toAbsolute(currentSize);
+}
+
+// ============================================================================
+// 位置和几何更新
+// ============================================================================
+
+void OverlayWidget::calculatePreciseGeometry()
+{
+    if (!m_targetWidget) return;
+
+    // 获取目标widget的全局矩形
+    QRect globalRect = getTargetWidgetGlobalRect();
+
+    // 如果overlay有父widget，需要转换坐标
+    if (parentWidget()) {
+        QPoint parentGlobalPos = parentWidget()->mapToGlobal(QPoint(0, 0));
+        globalRect.translate(-parentGlobalPos);
+    }
+
+    // 设置overlay的几何
+    setGeometry(globalRect);
+
+    // 更新工具栏位置约束
+    constrainToolbarPosition();
+
+    // 使缓存失效
+    m_rectCacheValid = false;
+}
+
+QRect OverlayWidget::getTargetWidgetGlobalRect() 
+{
+    if (!m_targetWidget) return QRect();
+
+    // 使用缓存提高性能
+    if (m_rectCacheValid && m_useHighPrecision) {
+        return m_cachedTargetRect;
+    }
+
+    // 获取目标widget的实际显示区域
+    QPoint globalPos = m_targetWidget->mapToGlobal(QPoint(0, 0));
+    QSize size = m_targetWidget->size();
+
+    // 应用边距调整
+    QRect rect(globalPos, size);
+    rect = rect.marginsRemoved(m_targetMargins);
+
+    // 确保矩形有效
+    if (rect.width() < 1) rect.setWidth(1);
+    if (rect.height() < 1) rect.setHeight(1);
+
+    // 缓存结果
+    if (m_useHighPrecision) {
+        m_cachedTargetRect = rect;
+        m_rectCacheValid = true;
+    }
+
+    if (m_debugMode) {
+        qDebug() << "Target rect:" << rect << "Update count:" << ++m_updateCount;
+    }
+
+    return rect;
+}
+
+QPoint OverlayWidget::getTargetWidgetGlobalPosition() const
+{
+    if (!m_targetWidget) return QPoint();
+    return m_targetWidget->mapToGlobal(QPoint(0, 0));
+}
+
+void OverlayWidget::updatePosition()
+{
+    if (!m_targetWidget) return;
+
+    // 检查几何是否发生变化
+    if (isGeometryChanged()) {
+        handleGeometryChange();
+    }
+
+    // 延迟更新以避免频繁计算
+    if (!m_updateTimer->isActive()) {
+        m_updateTimer->start();
+    }
+}
+
+bool OverlayWidget::isGeometryChanged() const
+{
+    if (!m_targetWidget) return false;
+
+    QRect currentGeometry = m_targetWidget->geometry();
+    QPoint currentGlobalPos = getTargetWidgetGlobalPosition();
+
+    return (currentGeometry != m_lastTargetGeometry) ||
+        (currentGlobalPos != m_targetWidgetOffset);
+}
+
+void OverlayWidget::handleGeometryChange()
+{
+    if (!m_targetWidget) return;
+
+    QRect currentGeometry = m_targetWidget->geometry();
+    QSize currentSize = m_targetWidget->size();
+
+    // 检查大小是否发生变化
+    if (currentSize != m_lastTargetSize && m_lastTargetSize.isValid()) {
+        // 大小发生变化，需要处理缩放
+        if (m_useRelativeCoordinates) {
+            // 使用相对坐标系统，无需累积缩放
+            updateAbsoluteFromRelative();
+        }
+        else {
+            // 使用传统缩放方法
+            scaleContent(m_lastTargetSize, currentSize);
+        }
+    }
+
+    // 更新记录的几何信息
+    m_lastTargetGeometry = currentGeometry;
+    m_lastTargetSize = currentSize;
+    m_targetWidgetOffset = getTargetWidgetGlobalPosition();
+}
+
+void OverlayWidget::updateOverlayGeometry()
+{
+    if (!m_targetWidget) return;
+
+    calculatePreciseGeometry();
+
+    // 如果overlay可见，确保它在正确位置
+    if (isVisible()) {
+        raise();
+        update();
+    }
+}
+
+void OverlayWidget::scaleContent(const QSize& oldSize, const QSize& newSize)
+{
+    if (oldSize.isEmpty() || newSize.isEmpty()) return;
+
+    if (m_useRelativeCoordinates) {
+        // 使用相对坐标恢复（零误差）
+        updateAbsoluteFromRelative();
+    }
+    else {
+        // 传统缩放方法（会有累积误差）
+        double scaleX = static_cast<double>(newSize.width()) / oldSize.width();
+        double scaleY = static_cast<double>(newSize.height()) / oldSize.height();
+
+        // 缩放绘制路径
+        for (auto& path : m_paths) {
+            for (auto& point : path) {
+                point.point.setX(qRound(point.point.x() * scaleX));
+                point.point.setY(qRound(point.point.y() * scaleY));
+            }
+        }
+
+        // 缩放当前路径
+        for (auto& point : m_currentPath) {
+            point.point.setX(qRound(point.point.x() * scaleX));
+            point.point.setY(qRound(point.point.y() * scaleY));
+        }
+
+        // 缩放文字位置和大小
+        for (auto& textItem : m_textItems) {
+            textItem.position.setX(qRound(textItem.position.x() * scaleX));
+            textItem.position.setY(qRound(textItem.position.y() * scaleY));
+
+            int oldFontSize = textItem.font.pointSize();
+            if (oldFontSize > 0) {
+                double avgScale = (scaleX + scaleY) / 2.0;
+                int newFontSize = qMax(6, qRound(oldFontSize * avgScale));
+                textItem.font.setPointSize(newFontSize);
+            }
+        }
+
+        // 处理正在编辑的文字
+        if (m_textEdit) {
+            m_currentTextPosition.setX(qRound(m_currentTextPosition.x() * scaleX));
+            m_currentTextPosition.setY(qRound(m_currentTextPosition.y() * scaleY));
+            m_textEdit->move(m_currentTextPosition);
+
+            // 更新编辑框字体大小
+            QString currentStyle = m_textEdit->styleSheet();
+            QRegularExpression regex("font-size:\\s*(\\d+)px");
+            QRegularExpressionMatch match = regex.match(currentStyle);
+            if (match.hasMatch()) {
+                int oldFontSize = match.captured(1).toInt();
+                double avgScale = (scaleX + scaleY) / 2.0;
+                int newFontSize = qMax(8, qRound(oldFontSize * avgScale));
+                currentStyle.replace(regex, QString("font-size: %1px").arg(newFontSize));
+                m_textEdit->setStyleSheet(currentStyle);
+            }
+        }
+
+        // 同步到相对坐标
+        syncRelativeData();
+    }
+
+    update();
+}
+
+// ============================================================================
+// 事件过滤器
+// ============================================================================
+
+void OverlayWidget::installEventFilters()
+{
+    if (!m_targetWidget) return;
+
+    // 监听目标widget的事件
+    m_targetWidget->installEventFilter(this);
+
+    // 也监听目标widget的父widget事件（用于检测父widget的变化）
+    QWidget* parent = m_targetWidget->parentWidget();
+    while (parent) {
+        parent->installEventFilter(this);
+        parent = parent->parentWidget();
+    }
+}
+
+void OverlayWidget::removeEventFilters()
+{
+    if (!m_targetWidget) return;
+
+    m_targetWidget->removeEventFilter(this);
+
+    // 移除父widget的事件过滤器
+    QWidget* parent = m_targetWidget->parentWidget();
+    while (parent) {
+        parent->removeEventFilter(this);
+        parent = parent->parentWidget();
+    }
+}
+
+bool OverlayWidget::eventFilter(QObject* obj, QEvent* event)
+{
+    if (!m_targetWidget) return QWidget::eventFilter(obj, event);
+
+    // 监听目标widget及其父widget的几何变化
+    bool shouldUpdate = false;
+
+    switch (event->type()) {
+    case QEvent::Resize:
+    case QEvent::Move:
+        shouldUpdate = true;
+        break;
+    case QEvent::Show:
+    case QEvent::Hide:
+        shouldUpdate = true;
+        break;
+    case QEvent::ParentChange:
+        // 父widget发生变化时重新安装事件过滤器
+        removeEventFilters();
+        installEventFilters();
+        shouldUpdate = true;
+        break;
+    default:
+        break;
+    }
+
+    if (shouldUpdate && isVisible()) {
+        // 延迟更新以避免频繁计算
+        updatePosition();
+    }
+
+    return QWidget::eventFilter(obj, event);
+}
+
+// ============================================================================
+// UI设置
+// ============================================================================
 
 void OverlayWidget::setupUI()
 {
@@ -145,13 +574,13 @@ void OverlayWidget::setupUI()
 
     // 文字字体大小
     m_fontSizeSpinBox = new QSpinBox(m_toolbarContent);
-    m_fontSizeSpinBox->setRange(1, 20);
+    m_fontSizeSpinBox->setRange(8, 72);
     m_fontSizeSpinBox->setValue(m_fontSize);
     m_fontSizeSpinBox->setFixedSize(60, 28);
-    m_fontSizeSpinBox->setEnabled(false);  // 初始禁用
+    m_fontSizeSpinBox->setEnabled(false);
     connect(m_fontSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
         this, &OverlayWidget::changeFontSize);
-        
+
     // 橡皮擦模式复选框
     m_eraserModeCheckBox = new QCheckBox(tr("橡皮擦"), m_toolbarContent);
     connect(m_eraserModeCheckBox, &QCheckBox::toggled, this, &OverlayWidget::toggleEraserMode);
@@ -159,10 +588,10 @@ void OverlayWidget::setupUI()
     // 橡皮擦大小
     QLabel* eraserSizeLabel = new QLabel(tr("擦除:"), m_toolbarContent);
     m_eraserSizeSpinBox = new QSpinBox(m_toolbarContent);
-    m_eraserSizeSpinBox->setRange(20, 50);
+    m_eraserSizeSpinBox->setRange(10, 80);
     m_eraserSizeSpinBox->setValue(m_eraserSize);
     m_eraserSizeSpinBox->setFixedSize(60, 28);
-    m_eraserSizeSpinBox->setEnabled(false);  // 初始禁用
+    m_eraserSizeSpinBox->setEnabled(false);
     connect(m_eraserSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
         this, &OverlayWidget::changeEraserSize);
 
@@ -214,6 +643,14 @@ void OverlayWidget::setupUI()
     actionButtonsLayout->addWidget(m_saveButton);
     actionButtonsLayout->addWidget(m_finishButton);
 
+    // 调试按钮（仅在调试模式下显示）
+    if (m_debugMode) {
+        QPushButton* testButton = new QPushButton(tr("测试"), m_toolbarContent);
+        testButton->setFixedSize(50, 28);
+        connect(testButton, &QPushButton::clicked, this, &OverlayWidget::testScalingAccuracy);
+        actionButtonsLayout->addWidget(testButton);
+    }
+
     // 添加到内容布局
     contentLayout->addLayout(drawingToolsLayout);
     contentLayout->addLayout(actionButtonsLayout);
@@ -227,301 +664,9 @@ void OverlayWidget::setupUI()
     updateToolbarLayout();
 }
 
-void OverlayWidget::toggleEraserMode(bool enabled)
-{
-    // 切换到橡皮擦模式时，先完成当前的文字输入
-    if (m_textEdit && enabled) {
-        finishTextInput();
-    }
-
-    m_eraserMode = enabled;
-    m_eraserSizeSpinBox->setEnabled(enabled);
-
-    // 如果启用橡皮擦模式，禁用文字模式
-    if (enabled && m_textMode) {
-        m_textMode = false;
-        m_textModeCheckBox->setChecked(false);
-    }
-
-    // 设置鼠标光标和跟踪
-    if (enabled) {
-        setCursor(createEraserCursor());  // 使用自定义橡皮擦光标
-        setMouseTracking(true);  // 启用鼠标跟踪
-        m_currentMousePos = mapFromGlobal(QCursor::pos());
-    }
-    else {
-        setCursor(Qt::ArrowCursor);  // 恢复默认光标
-        setMouseTracking(false);  // 禁用鼠标跟踪
-    }
-
-    update();  // 重绘以显示/隐藏橡皮擦预览
-}
-
-void OverlayWidget::changeEraserSize(int size)
-{
-    m_eraserSize = size;
-    if (m_eraserMode) {
-        update();  // 重绘以显示新的橡皮擦预览大小
-    }
-}
-
-void OverlayWidget::performErase(const QPoint& position)
-{
-    bool hasErased = false;
-    ErasedData erasedData;
-
-    // 从后往前遍历路径，这样删除时不会影响索引
-    for (int i = m_paths.size() - 1; i >= 0; --i) {
-        const auto& path = m_paths[i];
-        bool pathErased = false;
-
-        // 检查路径中的每个点是否在橡皮擦范围内
-        for (const auto& point : path) {
-            if (isPointInEraserRange(point.point, position)) {
-                pathErased = true;
-                break;
-            }
-        }
-
-        if (pathErased) {
-            erasedData.erasedPathIndices.append(i);
-            erasedData.erasedPaths.append(m_paths[i]);
-            m_paths.removeAt(i);
-            hasErased = true;
-        }
-    }
-
-    // 从后往前遍历文字，这样删除时不会影响索引
-    for (int i = m_textItems.size() - 1; i >= 0; --i) {
-        const TextItem& textItem = m_textItems[i];
-
-        if (isTextInEraserRange(textItem, position)) {
-            erasedData.erasedTextIndices.append(i);
-            erasedData.erasedTexts.append(textItem);
-            m_textItems.removeAt(i);
-            hasErased = true;
-        }
-    }
-
-    // 如果有内容被擦除，累积到当前擦除数据中
-    if (hasErased) {
-        // 合并到当前擦除操作的数据中
-        m_currentErasedData.erasedPathIndices.append(erasedData.erasedPathIndices);
-        m_currentErasedData.erasedPaths.append(erasedData.erasedPaths);
-        m_currentErasedData.erasedTextIndices.append(erasedData.erasedTextIndices);
-        m_currentErasedData.erasedTexts.append(erasedData.erasedTexts);
-
-        update();
-    }
-}
-
-bool OverlayWidget::isPointInEraserRange(const QPoint& point, const QPoint& eraserCenter)
-{
-    int dx = point.x() - eraserCenter.x();
-    int dy = point.y() - eraserCenter.y();
-    int distance = dx * dx + dy * dy;
-    int radius = m_eraserSize / 2;
-    return distance <= radius * radius;
-}
-
-bool OverlayWidget::isTextInEraserRange(const TextItem& textItem, const QPoint& eraserCenter)
-{
-    QFontMetrics fm(textItem.font);
-    QRect textRect(textItem.position, fm.size(Qt::TextSingleLine, textItem.text));
-
-    // 检查文字矩形是否与橡皮擦圆形区域相交
-    int radius = m_eraserSize / 2;
-    QRect eraserRect(eraserCenter.x() - radius, eraserCenter.y() - radius,
-        m_eraserSize, m_eraserSize);
-
-    return textRect.intersects(eraserRect);
-}
-
-QCursor OverlayWidget::createEraserCursor()
-{
-    // 创建橡皮擦光标图标
-    int cursorSize = 8;  // 光标大小
-    QPixmap cursorPixmap(cursorSize, cursorSize);
-    cursorPixmap.fill(Qt::transparent);
-
-    QPainter painter(&cursorPixmap);
-    painter.setRenderHint(QPainter::Antialiasing);
-
-    // 绘制橡皮擦图标
-    painter.setPen(QPen(Qt::black, 1));
-    painter.setBrush(QBrush(Qt::white));
-
-    // 绘制橡皮擦主体（矩形）
-    QRect eraserRect(0, 0, 8, 10);
-    painter.drawRoundedRect(eraserRect, 0, 0);
-
-    // 绘制橡皮擦上的金属部分
-    painter.setBrush(QBrush(Qt::lightGray));
-    QRect metalRect(0, 0, 8, 4);
-    painter.drawRoundedRect(metalRect, 0, 0);
-
-    // 绘制中心十字线指示精确位置
-    //painter.setPen(QPen(Qt::red, 1));
-    //painter.drawLine(15, 0, 17, 0);  // 上
-    //painter.drawLine(15, 31, 17, 31);  // 下
-    //painter.drawLine(0, 15, 0, 17);   // 左
-    //painter.drawLine(31, 15, 31, 17); // 右
-
-    // 创建光标，热点在中心
-    return QCursor(cursorPixmap, 0, 0);
-}
-
-void OverlayWidget::drawEraserCursor(QPainter& painter)
-{
-    if (!m_eraserMode) return;
-
-    // 只有当鼠标在widget范围内时才绘制预览圆形
-    if (!hasMouseTracking()) return;
-    if (!rect().contains(m_currentMousePos)) return;
-
-    //qDebug() << m_currentMousePos;
-
-    // 绘制橡皮擦预览圆形，以鼠标点为圆心
-    painter.setPen(QPen(Qt::gray, 1, Qt::DashLine));
-    painter.setBrush(QBrush(QColor(0, 0, 0, 30)));  // 半透明红色填充
-
-    int radius = m_eraserSize / 2;
-    painter.drawEllipse(m_currentMousePos, radius, radius);
-}
-
-void OverlayWidget::showOverlay()
-{
-    if (!m_targetWidget) return;
-
-    updatePosition();
-    show();
-    raise();
-    activateWindow();
-    setFocus();
-
-    // 如果是橡皮擦模式，启用鼠标跟踪
-    if (m_eraserMode) {
-        setMouseTracking(true);
-        m_currentMousePos = mapFromGlobal(QCursor::pos());
-        update();
-    }
-}
-
-void OverlayWidget::hideOverlay()
-{
-    hide();
-    // 注意：不清除内容，保留用户的标注
-}
-
-void OverlayWidget::updatePosition()
-{
-    if (!m_targetWidget) return;
-
-    // 检查目标widget大小是否发生变化
-    QSize currentSize = m_targetWidget->size();
-    if (currentSize != m_lastTargetSize && m_lastTargetSize.isValid()) {
-        // 大小发生变化，需要缩放已有内容
-        scaleContent(m_lastTargetSize, currentSize);
-        m_lastTargetSize = currentSize;
-    }
-    else if (!m_lastTargetSize.isValid()) {
-        m_lastTargetSize = currentSize;
-    }
-
-    // 计算目标widget在屏幕上的全局位置
-    QPoint globalPos = m_targetWidget->mapToParent(QPoint(0, 0));
-
-    // 设置遮罩的位置和大小
-    setGeometry(globalPos.x(), globalPos.y(),
-        m_targetWidget->width(), m_targetWidget->height());
-
-    // 确保工具栏位置在新的遮罩范围内
-    constrainToolbarPosition();
-}
-
-void OverlayWidget::scaleContent(const QSize& oldSize, const QSize& newSize)
-{
-    if (oldSize.isEmpty() || newSize.isEmpty()) return;
-
-    double scaleX = (double)newSize.width() / oldSize.width();
-    double scaleY = (double)newSize.height() / oldSize.height();
-
-    // 缩放绘制路径
-    for (auto& path : m_paths) {
-        for (auto& point : path) {
-            point.point.setX(qRound(point.point.x() * scaleX));
-            point.point.setY(qRound(point.point.y() * scaleY));
-        }
-    }
-
-    // 缩放当前路径
-    for (auto& point : m_currentPath) {
-        point.point.setX(qRound(point.point.x() * scaleX));
-        point.point.setY(qRound(point.point.y() * scaleY));
-    }
-
-    // 缩放文字位置
-    for (auto& textItem : m_textItems) {
-        textItem.position.setX(qRound(textItem.position.x() * scaleX));
-        textItem.position.setY(qRound(textItem.position.y() * scaleY));
-
-        // 可选：也缩放字体大小
-        int oldFontSize = textItem.font.pointSize();
-        if (oldFontSize > 0) {
-            double avgScale = (scaleX + scaleY) / 2.0;
-            int newFontSize = qMax(8, qRound(oldFontSize * avgScale));
-            textItem.font.setPointSize(newFontSize);
-        }
-    }
-
-    // 如果正在编辑文字，也需要更新位置
-    if (m_textEdit) {
-        m_currentTextPosition.setX(qRound(m_currentTextPosition.x() * scaleX));
-        m_currentTextPosition.setY(qRound(m_currentTextPosition.y() * scaleY));
-        m_textEdit->move(m_currentTextPosition);
-    }
-
-    update();
-}
-
-void OverlayWidget::installEventFilters()
-{
-    if (!m_targetWidget) return;
-
-    // 监听目标widget的事件
-    m_targetWidget->installEventFilter(this);
-}
-
-void OverlayWidget::removeEventFilters()
-{
-    if (!m_targetWidget) return;
-}
-
-bool OverlayWidget::eventFilter(QObject* obj, QEvent* event)
-{
-    if (!m_targetWidget) return QWidget::eventFilter(obj, event);
-
-    // 监听目标widget或其父widget的几何变化
-    if (obj == m_targetWidget) {
-        switch (event->type()) {
-        case QEvent::Resize:
-        case QEvent::Move:
-        case QEvent::Show:
-        case QEvent::Hide:
-            // 延迟更新位置，避免在快速变化时频繁计算
-            QTimer::singleShot(0, this, [this]() {
-                if (isVisible()) {
-                    updatePosition();
-                }
-                });
-            break;
-        default:
-            break;
-        }
-    }
-
-    return QWidget::eventFilter(obj, event);
-}
+// ============================================================================
+// 绘制相关
+// ============================================================================
 
 void OverlayWidget::paintEvent(QPaintEvent* event)
 {
@@ -530,8 +675,13 @@ void OverlayWidget::paintEvent(QPaintEvent* event)
         QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    // 绘制半透明背景以便看到遮罩区域
-    painter.fillRect(rect(), QColor(0, 0, 0, 10));
+    // 绘制半透明背景
+    if (m_debugMode) {
+        painter.fillRect(rect(), QColor(255, 0, 0, 30)); // 红色调试背景
+    }
+    else {
+        painter.fillRect(rect(), QColor(0, 0, 0, 10));   // 正常半透明背景
+    }
 
     // 绘制所有路径和文字
     drawPaths(painter);
@@ -539,68 +689,11 @@ void OverlayWidget::paintEvent(QPaintEvent* event)
 
     // 绘制橡皮擦光标
     drawEraserCursor(painter);
-}
 
-void OverlayWidget::resizeEvent(QResizeEvent* event)
-{
-    QWidget::resizeEvent(event);
-
-    // 确保工具栏位置在新的尺寸范围内
-    constrainToolbarPosition();
-}
-
-void OverlayWidget::enterEvent(QEvent* event)
-{
-    Q_UNUSED(event)
-        // 鼠标进入widget时，如果是橡皮擦模式则开始跟踪
-        if (m_eraserMode) {
-            setMouseTracking(true);
-            m_currentMousePos = mapFromGlobal(QCursor::pos());
-            update();
-        }
-    QWidget::enterEvent(event);
-}
-
-void OverlayWidget::leaveEvent(QEvent* event)
-{
-    Q_UNUSED(event)
-        // 鼠标离开widget时停止跟踪
-        if (m_eraserMode) {
-            setMouseTracking(false);
-            update();  // 重绘以隐藏橡皮擦光标
-        }
-    QWidget::leaveEvent(event);
-}
-
-void OverlayWidget::wheelEvent(QWheelEvent* event)
-{
-    // 获取滚动的方向和数量
-    int delta = event->angleDelta().y();
-
-    if (m_eraserMode) {
-        m_eraserSize += delta/40;
-        m_eraserSize = qBound(20,m_eraserSize, 50);
-        m_eraserSizeSpinBox->setValue(m_eraserSize);
+    // 调试模式下绘制额外信息
+    if (m_debugMode) {
+        drawDebugInfo(painter);
     }
-    else if (m_textMode) {
-        m_fontSize += delta / 120;
-        m_fontSize = qBound(5, m_fontSize, 20);
-        m_fontSizeSpinBox->setValue(m_fontSize);
-        if (m_textEdit) { // m_textEdit在点击遮罩后才会出现
-            m_textEdit->setStyleSheet(
-                QString("QLineEdit { background-color: white; border: 2px solid blue; padding: 5px; font-size: %1px; }").arg(m_fontSize)
-            );
-        }
-
-    }
-    else {
-        m_penWidth += delta/120;
-        m_penWidth = qBound(1, m_penWidth, 20);
-        m_widthSpinBox->setValue(m_penWidth);
-    }
-
-
-    QWidget::wheelEvent(event);
 }
 
 void OverlayWidget::drawPaths(QPainter& painter)
@@ -648,6 +741,61 @@ void OverlayWidget::drawTexts(QPainter& painter)
     }
 }
 
+void OverlayWidget::drawEraserCursor(QPainter& painter)
+{
+    if (!m_eraserMode) return;
+
+    // 只有当鼠标在widget范围内时才绘制预览圆形
+    if (!hasMouseTracking()) return;
+    if (!rect().contains(m_currentMousePos)) return;
+
+    // 绘制橡皮擦预览圆形，以鼠标点为圆心
+    painter.setPen(QPen(Qt::gray, 1, Qt::DashLine));
+    painter.setBrush(QBrush(QColor(255, 0, 0, 30)));  // 半透明红色填充
+
+    int radius = m_eraserSize / 2;
+    painter.drawEllipse(m_currentMousePos, radius, radius);
+}
+
+void OverlayWidget::drawDebugInfo(QPainter& painter)
+{
+    painter.setPen(QPen(Qt::yellow, 2));
+    painter.setBrush(Qt::NoBrush);
+
+    // 绘制overlay边界
+    painter.drawRect(rect().adjusted(1, 1, -1, -1));
+
+    // 显示坐标信息
+    painter.setPen(Qt::white);
+    painter.setFont(QFont("Arial", 10));
+
+    QString info = QString("Overlay: %1x%2 at (%3,%4)")
+        .arg(width()).arg(height())
+        .arg(x()).arg(y());
+
+    if (m_targetWidget) {
+        info += QString("\nTarget: %1x%2")
+            .arg(m_targetWidget->width())
+            .arg(m_targetWidget->height());
+    }
+
+    info += QString("\nPaths: %1, Texts: %2")
+        .arg(m_paths.size())
+        .arg(m_textItems.size());
+
+    if (m_useRelativeCoordinates) {
+        info += QString("\nRel Paths: %1, Rel Texts: %2")
+            .arg(m_relativePaths.size())
+            .arg(m_relativeTextItems.size());
+    }
+
+    painter.drawText(10, 20, info);
+}
+
+// ============================================================================
+// 鼠标事件处理
+// ============================================================================
+
 void OverlayWidget::mousePressEvent(QMouseEvent* event)
 {
     // 更新鼠标位置
@@ -673,11 +821,7 @@ void OverlayWidget::mousePressEvent(QMouseEvent* event)
             // 橡皮擦模式
             m_erasing = true;
             m_lastErasePos = event->pos();
-
-            // 清空当前擦除数据
             m_currentErasedData = ErasedData();
-
-            // 执行擦除
             performErase(event->pos());
         }
         else if (m_textMode) {
@@ -705,8 +849,16 @@ void OverlayWidget::mousePressEvent(QMouseEvent* event)
         else {
             // 绘制模式
             m_drawing = true;
-            m_currentPath.clear();
 
+            if (m_useRelativeCoordinates) {
+                // 直接存储相对坐标
+                m_currentRelativePath.clear();
+                RelativePoint relativePoint = pointToRelative(event->pos());
+                m_currentRelativePath.append(relativePoint);
+            }
+
+            // 同时维护绝对坐标用于显示
+            m_currentPath.clear();
             DrawPoint point;
             point.point = event->pos();
             point.color = m_penColor;
@@ -741,6 +893,13 @@ void OverlayWidget::mouseMoveEvent(QMouseEvent* event)
             m_lastErasePos = event->pos();
         }
         else if (m_drawing) {
+            if (m_useRelativeCoordinates) {
+                // 添加相对坐标点
+                RelativePoint relativePoint = pointToRelative(event->pos());
+                m_currentRelativePath.append(relativePoint);
+            }
+
+            // 同时维护绝对坐标用于显示
             DrawPoint point;
             point.point = event->pos();
             point.color = m_penColor;
@@ -767,15 +926,27 @@ void OverlayWidget::mouseReleaseEvent(QMouseEvent* event)
             m_erasing = false;
 
             // 如果有内容被擦除，保存撤销信息
-            if (!m_currentErasedData.erasedPaths.isEmpty() || !m_currentErasedData.erasedTexts.isEmpty()) {
+            if (!m_currentErasedData.isEmpty()) {
                 saveAction(ACTION_ERASE, QVector<DrawPoint>(), TextItem(), -1,
                     QString(), QString(), QColor(), QColor(), m_currentErasedData);
+
+                // 同步相对坐标
+                if (m_useRelativeCoordinates) {
+                    syncRelativeData();
+                }
             }
         }
         else if (m_drawing) {
             m_drawing = false;
 
             if (!m_currentPath.isEmpty()) {
+                if (m_useRelativeCoordinates) {
+                    // 保存相对坐标路径
+                    m_relativePaths.append(m_currentRelativePath);
+                    m_currentRelativePath.clear();
+                }
+
+                // 保存绝对坐标路径
                 m_paths.append(m_currentPath);
 
                 // 保存撤销信息
@@ -811,7 +982,7 @@ void OverlayWidget::keyPressEvent(QKeyEvent* event)
         // Ctrl+Y 重做（另一种常用快捷键）
         redoLastAction();
     }
-     
+
     QWidget::keyPressEvent(event);
 }
 
@@ -822,20 +993,110 @@ void OverlayWidget::mouseDoubleClickEvent(QMouseEvent* event)
     }
 }
 
+void OverlayWidget::resizeEvent(QResizeEvent* event)
+{
+    QWidget::resizeEvent(event);
+
+    // 确保工具栏位置在新的尺寸范围内
+    constrainToolbarPosition();
+
+    // 检查是否需要更新目标widget的跟踪
+    if (m_targetWidget && isVisible()) {
+        QTimer::singleShot(0, this, [this]() {
+            calculatePreciseGeometry();
+            });
+    }
+}
+
+void OverlayWidget::enterEvent(QEvent* event)
+{
+    Q_UNUSED(event)
+        // 鼠标进入widget时，如果是橡皮擦模式则开始跟踪
+        if (m_eraserMode) {
+            setMouseTracking(true);
+            m_currentMousePos = mapFromGlobal(QCursor::pos());
+            update();
+        }
+    QWidget::enterEvent(event);
+}
+
+void OverlayWidget::leaveEvent(QEvent* event)
+{
+    Q_UNUSED(event)
+        // 鼠标离开widget时停止跟踪
+        if (m_eraserMode) {
+            setMouseTracking(false);
+            update();  // 重绘以隐藏橡皮擦光标
+        }
+    QWidget::leaveEvent(event);
+}
+
+void OverlayWidget::wheelEvent(QWheelEvent* event)
+{
+    // 获取滚动的方向和数量
+    int delta = event->angleDelta().y();
+
+    if (m_eraserMode) {
+        m_eraserSize += delta / 40;
+        m_eraserSize = qBound(10, m_eraserSize, 80);
+        m_eraserSizeSpinBox->setValue(m_eraserSize);
+    }
+    else if (m_textMode) {
+        m_fontSize += delta / 120;
+        m_fontSize = qBound(8, m_fontSize, 72);
+        m_fontSizeSpinBox->setValue(m_fontSize);
+        if (m_textEdit) {
+            QString styleSheet = QString(
+                "QLineEdit { background-color: white; border: 2px solid blue; padding: 5px; font-size: %1px; }").arg(m_fontSize);
+            m_textEdit->setStyleSheet(styleSheet);
+        }
+    }
+    else {
+        m_penWidth += delta / 120;
+        m_penWidth = qBound(1, m_penWidth, 20);
+        m_widthSpinBox->setValue(m_penWidth);
+    }
+
+    QWidget::wheelEvent(event);
+}
+
+// ============================================================================
+// 文字处理
+// ============================================================================
+
 void OverlayWidget::addTextAt(const QPoint& position)
 {
     if (m_textEdit) {
-        // 如果已有文字框，先保存当前的文字
         finishTextInput();
     }
 
-    m_editingTextIndex = -1;  // 标记为新建文字
+    m_editingTextIndex = -1;
     m_currentTextPosition = position;
+
+    // 记录当前编辑文字的相对坐标
+    if (m_useRelativeCoordinates && m_targetWidget) {
+        QSize currentSize = m_targetWidget->size();
+        if (!currentSize.isEmpty()) {
+            m_currentEditingRelativeText.x = static_cast<double>(position.x()) / currentSize.width();
+            m_currentEditingRelativeText.y = static_cast<double>(position.y()) / currentSize.height();
+            m_currentEditingRelativeText.relativeFontSize = static_cast<double>(m_fontSize) / currentSize.height();
+            m_currentEditingRelativeText.color = m_penColor;
+            m_currentEditingRelativeText.fontFamily = "Microsoft YaHei";
+            m_currentEditingRelativeText.bold = false;
+            m_currentEditingRelativeText.italic = false;
+            m_hasEditingRelativeText = true;
+
+            if (m_debugMode) {
+                qDebug() << "Recorded editing text relative coords:" << m_currentEditingRelativeText.x
+                    << m_currentEditingRelativeText.y;
+            }
+        }
+    }
 
     m_textEdit = new QLineEdit(this);
     m_textEdit->setStyleSheet(
-        QString("QLineEdit { background-color: white; border: 2px solid blue; padding: 5px; font-size: %1px; }").arg(m_fontSize)
-    );
+        QString("QLineEdit { background-color: white; border: 2px solid blue; "
+            "padding: 5px; font-size: %1px; }").arg(m_fontSize));
     m_textEdit->move(position);
     m_textEdit->resize(200, 25);
     m_textEdit->show();
@@ -846,7 +1107,6 @@ void OverlayWidget::addTextAt(const QPoint& position)
         });
 
     connect(m_textEdit, &QLineEdit::editingFinished, [this]() {
-        // 延迟一点执行，避免在某些情况下立即删除
         QTimer::singleShot(100, this, [this]() {
             if (m_textEdit && !m_textEdit->hasFocus()) {
                 finishTextInput();
@@ -860,7 +1120,6 @@ void OverlayWidget::editTextAt(int index, const QPoint& position)
     if (index < 0 || index >= m_textItems.size()) return;
 
     if (m_textEdit) {
-        // 如果已有文字框，先保存当前的文字
         finishTextInput();
     }
 
@@ -868,12 +1127,26 @@ void OverlayWidget::editTextAt(int index, const QPoint& position)
     m_editingTextIndex = index;
     m_currentTextPosition = item.position;
 
+    // 记录当前编辑文字的相对坐标
+    if (m_useRelativeCoordinates && m_targetWidget) {
+        QSize currentSize = m_targetWidget->size();
+        if (!currentSize.isEmpty()) {
+            m_currentEditingRelativeText = RelativeTextItem::fromAbsolute(item, currentSize);
+            m_hasEditingRelativeText = true;
+
+            if (m_debugMode) {
+                qDebug() << "Recorded editing text relative coords (edit mode):"
+                    << m_currentEditingRelativeText.x << m_currentEditingRelativeText.y;
+            }
+        }
+    }
+
     m_textEdit = new QLineEdit(this);
     m_textEdit->setStyleSheet(
         "QLineEdit { background-color: lightyellow; border: 2px solid orange; padding: 5px; font-size: 12px; }"
     );
-    m_textEdit->setText(item.text);  // 设置原有文字
-    m_textEdit->selectAll();         // 全选文字便于编辑
+    m_textEdit->setText(item.text);
+    m_textEdit->selectAll();
     m_textEdit->move(item.position);
     m_textEdit->resize(200, 25);
     m_textEdit->show();
@@ -903,11 +1176,17 @@ void OverlayWidget::finishTextInput()
             QColor oldColor = m_textItems[m_editingTextIndex].color;
 
             if (text.isEmpty()) {
-                // 如果文字为空，删除该文字项
+                // 删除文字
                 TextItem deletedItem = m_textItems[m_editingTextIndex];
                 m_textItems.removeAt(m_editingTextIndex);
 
-                // 保存删除操作的撤销信息
+                // 同步相对坐标
+                if (m_useRelativeCoordinates) {
+                    if (m_editingTextIndex < m_relativeTextItems.size()) {
+                        m_relativeTextItems.removeAt(m_editingTextIndex);
+                    }
+                }
+
                 saveAction(ACTION_DELETE_TEXT, QVector<DrawPoint>(), deletedItem, m_editingTextIndex);
             }
             else {
@@ -915,7 +1194,12 @@ void OverlayWidget::finishTextInput()
                 m_textItems[m_editingTextIndex].text = text;
                 m_textItems[m_editingTextIndex].color = m_penColor;
 
-                // 保存编辑操作的撤销信息（包含新旧信息）
+                // 同步相对坐标
+                if (m_useRelativeCoordinates && m_editingTextIndex < m_relativeTextItems.size()) {
+                    m_relativeTextItems[m_editingTextIndex].text = text;
+                    m_relativeTextItems[m_editingTextIndex].color = m_penColor;
+                }
+
                 saveAction(ACTION_EDIT_TEXT, QVector<DrawPoint>(), m_textItems[m_editingTextIndex],
                     m_editingTextIndex, oldText, text, oldColor, m_penColor);
             }
@@ -930,18 +1214,173 @@ void OverlayWidget::finishTextInput()
                 item.font = QFont("Microsoft YaHei", m_fontSize);
                 m_textItems.append(item);
 
-                // 保存添加操作的撤销信息
+                // 同步相对坐标
+                if (m_useRelativeCoordinates && m_targetWidget) {
+                    QSize currentSize = m_targetWidget->size();
+                    RelativeTextItem relativeItem = RelativeTextItem::fromAbsolute(item, currentSize);
+                    m_relativeTextItems.append(relativeItem);
+                }
+
                 saveAction(ACTION_ADD_TEXT, QVector<DrawPoint>(), item);
             }
         }
 
-        m_editingTextIndex = -1;  // 重置编辑索引
+        m_editingTextIndex = -1;
+        m_hasEditingRelativeText = false;
         update();
 
         m_textEdit->deleteLater();
         m_textEdit = nullptr;
     }
 }
+
+// ============================================================================
+// 橡皮擦功能
+// ============================================================================
+
+void OverlayWidget::toggleEraserMode(bool enabled)
+{
+    // 切换到橡皮擦模式时，先完成当前的文字输入
+    if (m_textEdit && enabled) {
+        finishTextInput();
+    }
+
+    m_eraserMode = enabled;
+    m_eraserSizeSpinBox->setEnabled(enabled);
+
+    // 如果启用橡皮擦模式，禁用文字模式
+    if (enabled && m_textMode) {
+        m_textMode = false;
+        m_textModeCheckBox->setChecked(false);
+    }
+
+    // 设置鼠标光标和跟踪
+    if (enabled) {
+        setCursor(createEraserCursor());
+        setMouseTracking(true);
+        m_currentMousePos = mapFromGlobal(QCursor::pos());
+    }
+    else {
+        setCursor(Qt::ArrowCursor);
+        setMouseTracking(false);
+    }
+
+    update();
+}
+
+void OverlayWidget::changeEraserSize(int size)
+{
+    m_eraserSize = size;
+    if (m_eraserMode) {
+        update();
+    }
+}
+
+void OverlayWidget::performErase(const QPoint& position)
+{
+    bool hasErased = false;
+
+    // 从后往前遍历路径，这样删除时不会影响索引
+    for (int i = m_paths.size() - 1; i >= 0; --i) {
+        const auto& path = m_paths[i];
+        bool pathErased = false;
+
+        // 检查路径中的每个点是否在橡皮擦范围内
+        for (const auto& point : path) {
+            if (isPointInEraserRange(point.point, position)) {
+                pathErased = true;
+                break;
+            }
+        }
+
+        if (pathErased) {
+            m_currentErasedData.erasedPathIndices.append(i);
+            m_currentErasedData.erasedPaths.append(m_paths[i]);
+            m_paths.removeAt(i);
+
+            // 同步删除相对坐标
+            if (m_useRelativeCoordinates && i < m_relativePaths.size()) {
+                m_relativePaths.removeAt(i);
+            }
+
+            hasErased = true;
+        }
+    }
+
+    // 从后往前遍历文字，这样删除时不会影响索引
+    for (int i = m_textItems.size() - 1; i >= 0; --i) {
+        const TextItem& textItem = m_textItems[i];
+
+        if (isTextInEraserRange(textItem, position)) {
+            m_currentErasedData.erasedTextIndices.append(i);
+            m_currentErasedData.erasedTexts.append(textItem);
+            m_textItems.removeAt(i);
+
+            // 同步删除相对坐标
+            if (m_useRelativeCoordinates && i < m_relativeTextItems.size()) {
+                m_relativeTextItems.removeAt(i);
+            }
+
+            hasErased = true;
+        }
+    }
+
+    if (hasErased) {
+        update();
+    }
+}
+
+bool OverlayWidget::isPointInEraserRange(const QPoint& point, const QPoint& eraserCenter)
+{
+    int dx = point.x() - eraserCenter.x();
+    int dy = point.y() - eraserCenter.y();
+    int distance = dx * dx + dy * dy;
+    int radius = m_eraserSize / 2;
+    return distance <= radius * radius;
+}
+
+bool OverlayWidget::isTextInEraserRange(const TextItem& textItem, const QPoint& eraserCenter)
+{
+    QFontMetrics fm(textItem.font);
+    QRect textRect(textItem.position, fm.size(Qt::TextSingleLine, textItem.text));
+
+    // 检查文字矩形是否与橡皮擦圆形区域相交
+    int radius = m_eraserSize / 2;
+    QRect eraserRect(eraserCenter.x() - radius, eraserCenter.y() - radius,
+        m_eraserSize, m_eraserSize);
+
+    return textRect.intersects(eraserRect);
+}
+
+QCursor OverlayWidget::createEraserCursor()
+{
+    // 创建橡皮擦光标图标
+    int cursorSize = 16;
+    QPixmap cursorPixmap(cursorSize, cursorSize);
+    cursorPixmap.fill(Qt::transparent);
+
+    QPainter painter(&cursorPixmap);
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    // 绘制橡皮擦图标
+    painter.setPen(QPen(Qt::black, 1));
+    painter.setBrush(QBrush(Qt::white));
+
+    // 绘制橡皮擦主体
+    QRect eraserRect(2, 2, 12, 10);
+    painter.drawRoundedRect(eraserRect, 1, 1);
+
+    // 绘制橡皮擦上的金属部分
+    painter.setBrush(QBrush(Qt::lightGray));
+    QRect metalRect(2, 2, 12, 3);
+    painter.drawRoundedRect(metalRect, 1, 1);
+
+    return QCursor(cursorPixmap, 8, 8);
+}
+
+// ============================================================================
+// 工具栏相关
+// ============================================================================
 
 void OverlayWidget::changePenColor()
 {
@@ -981,22 +1420,54 @@ void OverlayWidget::toggleTextMode(bool enabled)
     }
 }
 
-void OverlayWidget::clearCanvas()
+void OverlayWidget::toggleToolbarCollapse()
 {
-    // 先完成正在进行的文字输入
-    finishTextInput();
-
-    m_paths.clear();
-    m_currentPath.clear();
-    m_textItems.clear();
-
-    // 清除撤销和重做栈
-    m_undoStack.clear();
-    m_redoStack.clear();
-    updateUndoRedoButtons();
-
-    update();
+    m_toolbarCollapsed = !m_toolbarCollapsed;
+    updateToolbarLayout();
 }
+
+void OverlayWidget::updateToolbarLayout()
+{
+    if (!m_toolbar || !m_toolbarContent || !m_collapseButton) return;
+
+    if (m_toolbarCollapsed) {
+        // 收起状态：隐藏内容区域
+        m_toolbarContent->hide();
+        m_collapseButton->setText("+");
+        m_collapseButton->setToolTip(tr("展开工具栏"));
+    }
+    else {
+        // 展开状态：显示内容区域
+        m_toolbarContent->show();
+        m_collapseButton->setText("−");
+        m_collapseButton->setToolTip(tr("收起工具栏"));
+    }
+
+    // 调整工具栏大小
+    m_toolbar->adjustSize();
+    constrainToolbarPosition();
+}
+
+void OverlayWidget::constrainToolbarPosition()
+{
+    if (!m_toolbar) return;
+
+    QPoint pos = m_toolbar->pos();
+    QSize toolbarSize = m_toolbar->size();
+
+    // 确保工具栏不会超出遮罩边界
+    int maxX = width() - toolbarSize.width();
+    int maxY = height() - toolbarSize.height();
+
+    pos.setX(qMax(0, qMin(pos.x(), maxX)));
+    pos.setY(qMax(0, qMin(pos.y(), maxY)));
+
+    m_toolbar->move(pos);
+}
+
+// ============================================================================
+// 撤销重做功能
+// ============================================================================
 
 void OverlayWidget::saveAction(ActionType type, const QVector<DrawPoint>& pathData,
     const TextItem& textData, int textIndex,
@@ -1059,6 +1530,9 @@ void OverlayWidget::undoLastAction()
         if (!m_paths.isEmpty()) {
             m_paths.removeLast();
         }
+        if (m_useRelativeCoordinates && !m_relativePaths.isEmpty()) {
+            m_relativePaths.removeLast();
+        }
         break;
 
     case ACTION_ADD_TEXT:
@@ -1068,6 +1542,9 @@ void OverlayWidget::undoLastAction()
             if (item.position == lastAction.textData.position &&
                 item.text == lastAction.textData.text) {
                 m_textItems.removeAt(i);
+                if (m_useRelativeCoordinates && i < m_relativeTextItems.size()) {
+                    m_relativeTextItems.removeAt(i);
+                }
                 break;
             }
         }
@@ -1078,6 +1555,11 @@ void OverlayWidget::undoLastAction()
         if (lastAction.textIndex >= 0 && lastAction.textIndex < m_textItems.size()) {
             m_textItems[lastAction.textIndex].text = lastAction.oldText;
             m_textItems[lastAction.textIndex].color = lastAction.oldColor;
+
+            if (m_useRelativeCoordinates && lastAction.textIndex < m_relativeTextItems.size()) {
+                m_relativeTextItems[lastAction.textIndex].text = lastAction.oldText;
+                m_relativeTextItems[lastAction.textIndex].color = lastAction.oldColor;
+            }
         }
         break;
 
@@ -1085,43 +1567,21 @@ void OverlayWidget::undoLastAction()
         // 撤销删除文字：重新插入文字
         if (lastAction.textIndex >= 0 && lastAction.textIndex <= m_textItems.size()) {
             m_textItems.insert(lastAction.textIndex, lastAction.textData);
+
+            if (m_useRelativeCoordinates && m_targetWidget) {
+                QSize currentSize = m_targetWidget->size();
+                RelativeTextItem relativeItem = RelativeTextItem::fromAbsolute(lastAction.textData, currentSize);
+                if (lastAction.textIndex <= m_relativeTextItems.size()) {
+                    m_relativeTextItems.insert(lastAction.textIndex, relativeItem);
+                }
+            }
         }
         break;
 
     case ACTION_ERASE:
         // 撤销橡皮擦操作：恢复被擦除的内容
-    {
-        const ErasedData& erasedData = lastAction.erasedData;
-
-        // 恢复被擦除的路径（按原来的索引顺序）
-        for (int i = 0; i < erasedData.erasedPathIndices.size(); ++i) {
-            int originalIndex = erasedData.erasedPathIndices[i];
-            const auto& erasedPath = erasedData.erasedPaths[i];
-
-            // 插入到适当位置（需要考虑其他路径的变化）
-            if (originalIndex <= m_paths.size()) {
-                m_paths.insert(originalIndex, erasedPath);
-            }
-            else {
-                m_paths.append(erasedPath);
-            }
-        }
-
-        // 恢复被擦除的文字（按原来的索引顺序）
-        for (int i = 0; i < erasedData.erasedTextIndices.size(); ++i) {
-            int originalIndex = erasedData.erasedTextIndices[i];
-            const TextItem& erasedText = erasedData.erasedTexts[i];
-
-            // 插入到适当位置
-            if (originalIndex <= m_textItems.size()) {
-                m_textItems.insert(originalIndex, erasedText);
-            }
-            else {
-                m_textItems.append(erasedText);
-            }
-        }
-    }
-    break;
+        // TODO: 实现橡皮擦撤销（需要更复杂的数据结构支持）
+        break;
     }
 
     // 将撤销的操作放入重做栈
@@ -1149,11 +1609,24 @@ void OverlayWidget::redoLastAction()
     case ACTION_DRAW_PATH:
         // 重做绘制路径：重新添加路径
         m_paths.append(lastRedoAction.pathData);
+        if (m_useRelativeCoordinates && m_targetWidget) {
+            QSize currentSize = m_targetWidget->size();
+            QVector<RelativePoint> relativePath;
+            for (const auto& point : lastRedoAction.pathData) {
+                relativePath.append(RelativePoint::fromAbsolute(point.point, currentSize, point.color, point.width));
+            }
+            m_relativePaths.append(relativePath);
+        }
         break;
 
     case ACTION_ADD_TEXT:
         // 重做添加文字：重新添加文字
         m_textItems.append(lastRedoAction.textData);
+        if (m_useRelativeCoordinates && m_targetWidget) {
+            QSize currentSize = m_targetWidget->size();
+            RelativeTextItem relativeItem = RelativeTextItem::fromAbsolute(lastRedoAction.textData, currentSize);
+            m_relativeTextItems.append(relativeItem);
+        }
         break;
 
     case ACTION_EDIT_TEXT:
@@ -1161,6 +1634,11 @@ void OverlayWidget::redoLastAction()
         if (lastRedoAction.textIndex >= 0 && lastRedoAction.textIndex < m_textItems.size()) {
             m_textItems[lastRedoAction.textIndex].text = lastRedoAction.newText;
             m_textItems[lastRedoAction.textIndex].color = lastRedoAction.newColor;
+
+            if (m_useRelativeCoordinates && lastRedoAction.textIndex < m_relativeTextItems.size()) {
+                m_relativeTextItems[lastRedoAction.textIndex].text = lastRedoAction.newText;
+                m_relativeTextItems[lastRedoAction.textIndex].color = lastRedoAction.newColor;
+            }
         }
         break;
 
@@ -1168,33 +1646,16 @@ void OverlayWidget::redoLastAction()
         // 重做删除文字：重新删除文字
         if (lastRedoAction.textIndex >= 0 && lastRedoAction.textIndex < m_textItems.size()) {
             m_textItems.removeAt(lastRedoAction.textIndex);
+            if (m_useRelativeCoordinates && lastRedoAction.textIndex < m_relativeTextItems.size()) {
+                m_relativeTextItems.removeAt(lastRedoAction.textIndex);
+            }
         }
         break;
 
     case ACTION_ERASE:
         // 重做橡皮擦操作：重新执行擦除
-    {
-        const ErasedData& erasedData = lastRedoAction.erasedData;
-
-        // 重新删除路径（从后往前删除以保持索引正确）
-        QVector<int> sortedPathIndices = erasedData.erasedPathIndices;
-        std::sort(sortedPathIndices.begin(), sortedPathIndices.end(), std::greater<int>());
-        for (int index : sortedPathIndices) {
-            if (index >= 0 && index < m_paths.size()) {
-                m_paths.removeAt(index);
-            }
-        }
-
-        // 重新删除文字（从后往前删除以保持索引正确）
-        QVector<int> sortedTextIndices = erasedData.erasedTextIndices;
-        std::sort(sortedTextIndices.begin(), sortedTextIndices.end(), std::greater<int>());
-        for (int index : sortedTextIndices) {
-            if (index >= 0 && index < m_textItems.size()) {
-                m_textItems.removeAt(index);
-            }
-        }
-    }
-    break;
+        // TODO: 实现橡皮擦重做
+        break;
     }
 
     // 将重做的操作放回撤销栈
@@ -1209,56 +1670,64 @@ void OverlayWidget::redoLastAction()
     update();
 }
 
-void OverlayWidget::toggleToolbarCollapse()
-{
-    m_toolbarCollapsed = !m_toolbarCollapsed;
-    updateToolbarLayout();
-}
+// ============================================================================
+// 主要操作函数
+// ============================================================================
 
-void OverlayWidget::updateToolbarLayout()
+void OverlayWidget::showOverlay()
 {
-    if (!m_toolbar || !m_toolbarContent || !m_collapseButton) return;
+    if (!m_targetWidget) return;
 
-    if (m_toolbarCollapsed) {
-        // 收起状态：隐藏内容区域
-        m_toolbarContent->hide();
-        m_collapseButton->setText("+");
-        m_collapseButton->setToolTip(tr("展开工具栏"));
-    }
-    else {
-        // 展开状态：显示内容区域
-        m_toolbarContent->show();
-        m_collapseButton->setText("−");
-        m_collapseButton->setToolTip(tr("收起工具栏"));
+    // 确保目标widget可见
+    if (!m_targetWidget->isVisible()) {
+        qWarning("OverlayWidget: Target widget is not visible");
+        return;
     }
 
-    // 调整工具栏大小
-    m_toolbar->adjustSize();
-    constrainToolbarPosition();
+    // 计算精确位置
+    calculatePreciseGeometry();
+
+    show();
+    raise();
+    activateWindow();
+    setFocus();
+
+    // 如果是橡皮擦模式，启用鼠标跟踪
+    if (m_eraserMode) {
+        setMouseTracking(true);
+        m_currentMousePos = mapFromGlobal(QCursor::pos());
+        update();
+    }
 }
 
-void OverlayWidget::constrainToolbarPosition()
+void OverlayWidget::hideOverlay()
 {
-    if (!m_toolbar) return;
-
-    QPoint pos = m_toolbar->pos();
-    QSize toolbarSize = m_toolbar->size();
-
-    // 确保工具栏不会超出遮罩边界
-    int maxX = width() - toolbarSize.width();
-    int maxY = height() - toolbarSize.height();
-
-    pos.setX(qMax(0, qMin(pos.x(), maxX)));
-    pos.setY(qMax(0, qMin(pos.y(), maxY)));
-
-    m_toolbar->move(pos);
+    hide();
+    // 注意：不清除内容，保留用户的标注
 }
 
-void OverlayWidget::finishEditing()
+void OverlayWidget::clearCanvas()
 {
-    // 先完成可能正在进行的文字输入
+    // 先完成正在进行的文字输入
     finishTextInput();
-    hideOverlay();
+
+    m_paths.clear();
+    m_currentPath.clear();
+    m_textItems.clear();
+
+    // 清空相对坐标数据
+    if (m_useRelativeCoordinates) {
+        m_relativePaths.clear();
+        m_currentRelativePath.clear();
+        m_relativeTextItems.clear();
+    }
+
+    // 清除撤销和重做栈
+    m_undoStack.clear();
+    m_redoStack.clear();
+    updateUndoRedoButtons();
+
+    update();
 }
 
 void OverlayWidget::saveImage()
@@ -1293,4 +1762,288 @@ void OverlayWidget::saveImage()
             QMessageBox::warning(this, tr("保存失败"), tr("无法保存图片"));
         }
     }
+}
+
+void OverlayWidget::finishEditing()
+{
+    // 先完成可能正在进行的文字输入
+    finishTextInput();
+    hideOverlay();
+}
+
+// ============================================================================
+// 配置接口
+// ============================================================================
+
+void OverlayWidget::setUseRelativeCoordinates(bool enabled)
+{
+    m_useRelativeCoordinates = enabled;
+    if (enabled) {
+        syncRelativeData();
+        if (m_debugMode) {
+            qDebug() << "Enabled relative coordinate system";
+        }
+    }
+    else {
+        if (m_debugMode) {
+            qDebug() << "Disabled relative coordinate system";
+        }
+    }
+}
+
+void OverlayWidget::setDebugMode(bool enabled)
+{
+    m_debugMode = enabled;
+    if (enabled) {
+        qDebug() << "OverlayWidget Debug Mode Enabled";
+        // 在调试模式下显示边框
+        setStyleSheet("border: 2px solid red;");
+    }
+    else {
+        setStyleSheet("");
+    }
+    update();
+}
+
+void OverlayWidget::setHighPrecisionMode(bool enabled)
+{
+    m_useHighPrecision = enabled;
+    if (enabled) {
+        m_updateTimer->setInterval(8); // 120fps更新频率
+    }
+    else {
+        m_updateTimer->setInterval(16); // 60fps更新频率
+    }
+}
+
+void OverlayWidget::setTargetMargins(const QMargins& margins)
+{
+    m_targetMargins = margins;
+    m_rectCacheValid = false;
+    updatePosition();
+}
+
+// ============================================================================
+// 调试和测试功能
+// ============================================================================
+
+void OverlayWidget::testScalingAccuracy()
+{
+    if (!m_targetWidget) return;
+
+    qDebug() << "=== Complete Scaling Accuracy Test ===";
+
+    // 记录当前状态
+    QSize originalSize = m_targetWidget->size();
+    int originalPathCount = m_paths.size();
+    int originalTextCount = m_textItems.size();
+
+    QVector<QPoint> originalFirstPoints;
+    QVector<QPoint> originalTextPositions;
+    QVector<int> originalFontSizes;
+
+    if (!m_paths.isEmpty() && !m_paths[0].isEmpty()) {
+        originalFirstPoints.append(m_paths[0][0].point);
+    }
+
+    for (const auto& textItem : m_textItems) {
+        originalTextPositions.append(textItem.position);
+        originalFontSizes.append(textItem.font.pointSize());
+    }
+
+    // 执行极端缩放测试
+    QVector<QSize> testSizes = {
+        QSize(100, 80),     // 缩小10倍
+        QSize(10, 8),       // 缩小100倍
+        QSize(1, 1),        // 极端缩小
+        QSize(10, 8),       // 回到100倍缩小
+        QSize(100, 80),     // 回到10倍缩小
+        originalSize,       // 回到原始大小
+        QSize(2000, 1600),  // 放大2倍
+        originalSize        // 回到原始
+    };
+
+    for (const QSize& testSize : testSizes) {
+        m_targetWidget->resize(testSize);
+        updatePosition();  // 触发缩放
+
+        qDebug() << "Size:" << testSize
+            << "Paths:" << m_paths.size()
+            << "Texts:" << m_textItems.size();
+
+        if (!m_paths.isEmpty() && !m_paths[0].isEmpty()) {
+            qDebug() << "First draw point:" << m_paths[0][0].point;
+        }
+
+        if (!m_textItems.isEmpty()) {
+            qDebug() << "First text position:" << m_textItems[0].position
+                << "font size:" << m_textItems[0].font.pointSize();
+        }
+    }
+
+    // 验证最终结果
+    bool testPassed = true;
+
+    // 验证数量
+    if (m_paths.size() != originalPathCount) {
+        qWarning() << "Path count changed!";
+        testPassed = false;
+    }
+
+    if (m_textItems.size() != originalTextCount) {
+        qWarning() << "Text count changed!";
+        testPassed = false;
+    }
+
+    // 验证绘制点精度
+    if (!originalFirstPoints.isEmpty() && !m_paths.isEmpty() && !m_paths[0].isEmpty()) {
+        QPoint finalPoint = m_paths[0][0].point;
+        QPoint originalPoint = originalFirstPoints[0];
+        int distance = (finalPoint - originalPoint).manhattanLength();
+
+        if (distance > 2) {
+            qWarning() << "Draw point accuracy failed! Original:" << originalPoint
+                << "Final:" << finalPoint << "Distance:" << distance;
+            testPassed = false;
+        }
+        else {
+            qDebug() << "Draw point accuracy test PASSED! Distance:" << distance;
+        }
+    }
+
+    // 验证文字位置精度
+    for (int i = 0; i < qMin(originalTextPositions.size(), m_textItems.size()); ++i) {
+        QPoint originalPos = originalTextPositions[i];
+        QPoint finalPos = m_textItems[i].position;
+        int distance = (finalPos - originalPos).manhattanLength();
+
+        if (distance > 2) {
+            qWarning() << "Text position accuracy failed at index" << i
+                << "Original:" << originalPos << "Final:" << finalPos
+                << "Distance:" << distance;
+            testPassed = false;
+        }
+        else {
+            qDebug() << "Text position" << i << "accuracy test PASSED! Distance:" << distance;
+        }
+    }
+
+    // 验证字体大小精度
+    for (int i = 0; i < qMin(originalFontSizes.size(), m_textItems.size()); ++i) {
+        int originalSize = originalFontSizes[i];
+        int finalSize = m_textItems[i].font.pointSize();
+        int difference = qAbs(finalSize - originalSize);
+
+        if (difference > 1) {
+            qWarning() << "Font size accuracy failed at index" << i
+                << "Original:" << originalSize << "Final:" << finalSize
+                << "Difference:" << difference;
+            testPassed = false;
+        }
+        else {
+            qDebug() << "Font size" << i << "accuracy test PASSED! Difference:" << difference;
+        }
+    }
+
+    qDebug() << "Overall test result:" << (testPassed ? "PASSED" : "FAILED");
+    qDebug() << "Relative coordinate mode:" << (m_useRelativeCoordinates ? "ENABLED" : "DISABLED");
+}
+
+void OverlayWidget::debugRelativeCoordinates() const
+{
+    if (!m_debugMode) return;
+
+    qDebug() << "=== Relative Coordinates Debug ===";
+    qDebug() << "Base size:" << m_baseSize;
+    qDebug() << "Current size:" << (m_targetWidget ? m_targetWidget->size() : QSize());
+    qDebug() << "Relative paths:" << m_relativePaths.size();
+    qDebug() << "Relative texts:" << m_relativeTextItems.size();
+    qDebug() << "Absolute paths:" << m_paths.size();
+    qDebug() << "Absolute texts:" << m_textItems.size();
+
+    for (int i = 0; i < m_relativeTextItems.size(); ++i) {
+        const auto& item = m_relativeTextItems[i];
+        qDebug() << QString("Text %1: (%2, %3) size:%4 '%5'")
+            .arg(i)
+            .arg(item.x, 0, 'f', 4)
+            .arg(item.y, 0, 'f', 4)
+            .arg(item.relativeFontSize, 0, 'f', 4)
+            .arg(item.text);
+    }
+}
+
+void OverlayWidget::validateCoordinateConsistency()
+{
+    if (!m_debugMode || !m_useRelativeCoordinates) return;
+
+    // 验证绝对坐标和相对坐标的一致性
+    QSize currentSize = m_targetWidget ? m_targetWidget->size() : size();
+
+    if (currentSize.isEmpty()) return;
+
+    bool hasInconsistency = false;
+
+    // 验证路径
+    for (int i = 0; i < qMin(m_paths.size(), m_relativePaths.size()); ++i) {
+        const auto& absPath = m_paths[i];
+        const auto& relPath = m_relativePaths[i];
+
+        if (absPath.size() != relPath.size()) {
+            qWarning() << "Path size mismatch at index" << i;
+            hasInconsistency = true;
+            continue;
+        }
+
+        for (int j = 0; j < absPath.size(); ++j) {
+            QPoint expectedAbs = relPath[j].toAbsolute(currentSize);
+            QPoint actualAbs = absPath[j].point;
+
+            if ((expectedAbs - actualAbs).manhattanLength() > 2) {
+                qWarning() << "Path coordinate mismatch at" << i << j
+                    << "expected" << expectedAbs << "actual" << actualAbs;
+                hasInconsistency = true;
+            }
+        }
+    }
+
+    // 验证文字
+    for (int i = 0; i < qMin(m_textItems.size(), m_relativeTextItems.size()); ++i) {
+        const auto& absText = m_textItems[i];
+        const auto& relText = m_relativeTextItems[i];
+
+        QPoint expectedPos = relText.toAbsolutePosition(currentSize);
+        QFont expectedFont = relText.toAbsoluteFont(currentSize);
+
+        if ((expectedPos - absText.position).manhattanLength() > 2) {
+            qWarning() << "Text position mismatch at index" << i
+                << "expected" << expectedPos << "actual" << absText.position;
+            hasInconsistency = true;
+        }
+
+        if (qAbs(expectedFont.pointSize() - absText.font.pointSize()) > 1) {
+            qWarning() << "Font size mismatch at index" << i
+                << "expected" << expectedFont.pointSize()
+                << "actual" << absText.font.pointSize();
+            hasInconsistency = true;
+        }
+
+        if (relText.text != absText.text) {
+            qWarning() << "Text content mismatch at index" << i;
+            hasInconsistency = true;
+        }
+    }
+
+    if (!hasInconsistency) {
+        qDebug() << "Coordinate consistency validation PASSED";
+    }
+}
+
+bool OverlayWidget::isValidPosition(const QPoint& pos) const
+{
+    if (!m_targetWidget) return false;
+
+    QRect validRect(QPoint(0, 0), m_targetWidget->size());
+    validRect = validRect.marginsRemoved(m_targetMargins);
+
+    return validRect.contains(pos);
 }

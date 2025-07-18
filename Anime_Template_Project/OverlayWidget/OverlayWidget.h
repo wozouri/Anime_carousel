@@ -17,6 +17,7 @@
 #include <QTimer>
 #include <QFontMetrics>
 #include <QEvent>
+#include <QRegularExpression>
 
 class OverlayWidget : public QWidget
 {
@@ -29,6 +30,12 @@ public:
     void showOverlay();
     void hideOverlay();
 
+    // 相对坐标系统控制接口
+    void setUseRelativeCoordinates(bool enabled);
+    void setDebugMode(bool enabled);
+    void setHighPrecisionMode(bool enabled);
+    void setTargetMargins(const QMargins& margins);
+
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
@@ -37,8 +44,8 @@ protected:
     void keyPressEvent(QKeyEvent* event) override;
     void mouseDoubleClickEvent(QMouseEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
-    void enterEvent(QEvent* event) override;  // 新增：鼠标进入事件
-    void leaveEvent(QEvent* event) override;       // 新增：鼠标离开事件
+    void enterEvent(QEvent* event) override;
+    void leaveEvent(QEvent* event) override;
     void wheelEvent(QWheelEvent* event) override;
     bool eventFilter(QObject* obj, QEvent* event) override;
 
@@ -47,23 +54,25 @@ private slots:
     void changePenWidth(int width);
     void changeFontSize(int size);
     void toggleTextMode(bool enabled);
-    void toggleEraserMode(bool enabled);  // 新增：切换橡皮擦模式
-    void changeEraserSize(int size);      // 新增：改变橡皮擦大小
+    void toggleEraserMode(bool enabled);
+    void changeEraserSize(int size);
     void clearCanvas();
     void saveImage();
     void finishEditing();
-    void undoLastAction();  // 撤销上次操作
-    void redoLastAction();  // 重做上次操作
+    void undoLastAction();
+    void redoLastAction();
+    void testScalingAccuracy();  // 测试缩放精度
 
 private:
     enum ActionType {
-        ACTION_DRAW_PATH,     // 绘制路径
-        ACTION_ADD_TEXT,      // 添加文字
-        ACTION_EDIT_TEXT,     // 编辑文字
-        ACTION_DELETE_TEXT,   // 删除文字
-        ACTION_ERASE          // 新增：橡皮擦操作
+        ACTION_DRAW_PATH,
+        ACTION_ADD_TEXT,
+        ACTION_EDIT_TEXT,
+        ACTION_DELETE_TEXT,
+        ACTION_ERASE
     };
 
+    // 传统绝对坐标结构（用于显示）
     struct DrawPoint {
         QPoint point;
         QColor color;
@@ -77,63 +86,199 @@ private:
         QFont font;
     };
 
-    // 新增：橡皮擦删除的数据结构
+    // 相对坐标结构（用于存储和缩放）
+    struct RelativePoint {
+        double x, y;  // 相对坐标 (0.0-1.0)
+        QColor color;
+        int width;
+
+        // 转换为绝对坐标
+        QPoint toAbsolute(const QSize& containerSize) const {
+            if (containerSize.isEmpty()) return QPoint(0, 0);
+            int absX = qRound(x * containerSize.width());
+            int absY = qRound(y * containerSize.height());
+            return QPoint(absX, absY);
+        }
+
+        // 从绝对坐标创建
+        static RelativePoint fromAbsolute(const QPoint& point, const QSize& containerSize,
+            const QColor& color = Qt::black, int width = 1) {
+            RelativePoint rp;
+            if (containerSize.width() > 0 && containerSize.height() > 0) {
+                rp.x = static_cast<double>(point.x()) / containerSize.width();
+                rp.y = static_cast<double>(point.y()) / containerSize.height();
+            }
+            else {
+                rp.x = 0.0;
+                rp.y = 0.0;
+            }
+            rp.color = color;
+            rp.width = width;
+            return rp;
+        }
+    };
+
+    struct RelativeTextItem {
+        double x, y;                // 位置相对坐标 (0.0-1.0)
+        QString text;
+        QColor color;
+        QString fontFamily;
+        double relativeFontSize;    // 字体大小相对于容器高度的比例
+        bool bold;
+        bool italic;
+
+        // 转换为绝对坐标和字体
+        QPoint toAbsolutePosition(const QSize& containerSize) const {
+            if (containerSize.isEmpty()) return QPoint(0, 0);
+            int absX = qRound(x * containerSize.width());
+            int absY = qRound(y * containerSize.height());
+            return QPoint(absX, absY);
+        }
+
+        QFont toAbsoluteFont(const QSize& containerSize) const {
+            int fontSize = 12;  // 默认字体大小
+            if (containerSize.height() > 0) {
+                fontSize = qMax(6, qRound(relativeFontSize * containerSize.height()));
+            }
+
+            QFont font(fontFamily, fontSize);
+            font.setBold(bold);
+            font.setItalic(italic);
+            return font;
+        }
+
+        TextItem toAbsolute(const QSize& containerSize) const {
+            TextItem item;
+            item.position = toAbsolutePosition(containerSize);
+            item.text = text;
+            item.color = color;
+            item.font = toAbsoluteFont(containerSize);
+            return item;
+        }
+
+        // 从绝对坐标和字体创建
+        static RelativeTextItem fromAbsolute(const TextItem& item, const QSize& containerSize) {
+            RelativeTextItem relItem;
+
+            if (containerSize.width() > 0 && containerSize.height() > 0) {
+                relItem.x = static_cast<double>(item.position.x()) / containerSize.width();
+                relItem.y = static_cast<double>(item.position.y()) / containerSize.height();
+                relItem.relativeFontSize = static_cast<double>(item.font.pointSize()) / containerSize.height();
+            }
+            else {
+                relItem.x = 0.0;
+                relItem.y = 0.0;
+                relItem.relativeFontSize = 0.02; // 默认2%的高度
+            }
+
+            relItem.text = item.text;
+            relItem.color = item.color;
+            relItem.fontFamily = item.font.family();
+            relItem.bold = item.font.bold();
+            relItem.italic = item.font.italic();
+
+            return relItem;
+        }
+    };
+
+    // 橡皮擦删除的数据结构
     struct ErasedData {
-        QVector<int> erasedPathIndices;           // 被删除的路径索引
-        QVector<QVector<DrawPoint>> erasedPaths;  // 被删除的路径数据
-        QVector<int> erasedTextIndices;           // 被删除的文字索引
-        QVector<TextItem> erasedTexts;            // 被删除的文字数据
+        QVector<int> erasedPathIndices;
+        QVector<QVector<DrawPoint>> erasedPaths;
+        QVector<int> erasedTextIndices;
+        QVector<TextItem> erasedTexts;
+
+        bool isEmpty() const {
+            return erasedPaths.isEmpty() && erasedTexts.isEmpty();
+        }
     };
 
     struct UndoAction {
         ActionType type;
-        QVector<DrawPoint> pathData;  // 路径数据（用于绘制撤销）
-        TextItem textData;            // 文字数据（用于文字撤销）
-        int textIndex;                // 文字索引（用于编辑/删除撤销）
-        QString oldText;              // 原文字内容（用于编辑撤销）
-        QString newText;              // 新文字内容（用于重做）
-        QColor oldColor;              // 原文字颜色（用于编辑撤销）
-        QColor newColor;              // 新文字颜色（用于重做）
-        ErasedData erasedData;        // 新增：橡皮擦删除的数据
+        QVector<DrawPoint> pathData;
+        TextItem textData;
+        int textIndex;
+        QString oldText;
+        QString newText;
+        QColor oldColor;
+        QColor newColor;
+        ErasedData erasedData;
     };
 
+    // 相对坐标系统相关函数
+    void initializeRelativeSystem();
+    void convertToRelativeCoordinates();
+    void updateAbsoluteFromRelative();
+    void syncRelativeData();
+    RelativePoint pointToRelative(const QPoint& point) const;
+    QPoint relativeToPoint(const RelativePoint& relativePoint) const;
+
+    // UI设置和位置更新
     void setupUI();
     void updatePosition();
+    void calculatePreciseGeometry();
+    void updateOverlayGeometry();
+    QRect getTargetWidgetGlobalRect() ;
+    QPoint getTargetWidgetGlobalPosition() const;
+    void handleGeometryChange();
+    bool isGeometryChanged() const;
     void scaleContent(const QSize& oldSize, const QSize& newSize);
     void installEventFilters();
     void removeEventFilters();
+
+    // 绘制相关函数
     void drawPaths(QPainter& painter);
     void drawTexts(QPainter& painter);
-    void drawEraserCursor(QPainter& painter);  // 新增：绘制橡皮擦光标
+    void drawEraserCursor(QPainter& painter);
+    void drawDebugInfo(QPainter& painter);
+
+    // 文字相关函数
     void addTextAt(const QPoint& position);
     void editTextAt(int index, const QPoint& position);
     void finishTextInput();
 
-    // 新增：橡皮擦相关函数
+    // 橡皮擦相关函数
     void performErase(const QPoint& position);
     bool isPointInEraserRange(const QPoint& point, const QPoint& eraserCenter);
     bool isTextInEraserRange(const TextItem& textItem, const QPoint& eraserCenter);
-    QCursor createEraserCursor();  // 新增：创建橡皮擦光标
+    QCursor createEraserCursor();
 
     // 撤销/重做相关函数
     void saveAction(ActionType type, const QVector<DrawPoint>& pathData = QVector<DrawPoint>(),
         const TextItem& textData = TextItem(), int textIndex = -1,
         const QString& oldText = QString(), const QString& newText = QString(),
         const QColor& oldColor = QColor(), const QColor& newColor = QColor(),
-        const ErasedData& erasedData = ErasedData());  // 新增橡皮擦数据参数
-    void updateUndoRedoButtons();  // 更新撤销/重做按钮状态
-    void clearRedoStack();         // 清空重做栈
+        const ErasedData& erasedData = ErasedData());
+    void updateUndoRedoButtons();
+    void clearRedoStack();
 
     // 工具栏相关函数
-    void toggleToolbarCollapse();  // 切换工具栏收起状态
-    void updateToolbarLayout();    // 更新工具栏布局
-    void constrainToolbarPosition(); // 限制工具栏位置在遮罩内
+    void toggleToolbarCollapse();
+    void updateToolbarLayout();
+    void constrainToolbarPosition();
 
-    // 目标widget
+    // 调试和测试函数
+    void debugRelativeCoordinates() const;
+    void validateCoordinateConsistency();
+    bool isValidPosition(const QPoint& pos) const;
+
+    // 目标widget相关
     QWidget* m_targetWidget;
     QSize m_lastTargetSize;
+    QRect m_lastTargetGeometry;
+    QPoint m_targetWidgetOffset;
+    bool m_geometryUpdatePending;
+    QTimer* m_updateTimer;
 
-    // 绘制相关
+    // 相对坐标系统
+    QVector<QVector<RelativePoint>> m_relativePaths;
+    QVector<RelativePoint> m_currentRelativePath;
+    QVector<RelativeTextItem> m_relativeTextItems;
+    QSize m_baseSize;
+    bool m_baseSizeInitialized;
+    bool m_useRelativeCoordinates;
+
+    // 传统绝对坐标（用于显示和兼容）
     QVector<QVector<DrawPoint>> m_paths;
     QVector<DrawPoint> m_currentPath;
     QColor m_penColor;
@@ -143,30 +288,34 @@ private:
     // 文字相关
     QVector<TextItem> m_textItems;
     QLineEdit* m_textEdit;
-    int m_fontSize;             // 字体大小
+    int m_fontSize;
     bool m_textMode;
     QPoint m_currentTextPosition;
     int m_editingTextIndex;
 
-    // 新增：橡皮擦相关
-    bool m_eraserMode;            // 橡皮擦模式
-    int m_eraserSize;             // 橡皮擦大小
-    bool m_erasing;               // 是否正在擦除
-    QPoint m_lastErasePos;        // 上次擦除位置（用于连续擦除）
-    QPoint m_currentMousePos;     // 当前鼠标位置（用于橡皮擦光标）
-    ErasedData m_currentErasedData; // 当前擦除操作的数据
+    // 当前编辑文字的相对坐标
+    RelativeTextItem m_currentEditingRelativeText;
+    bool m_hasEditingRelativeText;
+
+    // 橡皮擦相关
+    bool m_eraserMode;
+    int m_eraserSize;
+    bool m_erasing;
+    QPoint m_lastErasePos;
+    QPoint m_currentMousePos;
+    ErasedData m_currentErasedData;
 
     // 工具栏
     QWidget* m_toolbar;
-    QWidget* m_toolbarHeader;      // 工具栏标题栏（拖动区域）
-    QWidget* m_toolbarContent;     // 工具栏内容区域
-    QPushButton* m_collapseButton; // 收起/展开按钮
+    QWidget* m_toolbarHeader;
+    QWidget* m_toolbarContent;
+    QPushButton* m_collapseButton;
     QPushButton* m_colorButton;
-    QSpinBox* m_widthSpinBox;      // 画笔大小选择
-    QSpinBox* m_fontSizeSpinBox;      // 画笔大小选择
+    QSpinBox* m_widthSpinBox;
+    QSpinBox* m_fontSizeSpinBox;
     QCheckBox* m_textModeCheckBox;
-    QCheckBox* m_eraserModeCheckBox;  // 新增：橡皮擦模式复选框
-    QSpinBox* m_eraserSizeSpinBox;    // 新增：橡皮擦大小选择
+    QCheckBox* m_eraserModeCheckBox;
+    QSpinBox* m_eraserSizeSpinBox;
     QPushButton* m_clearButton;
     QPushButton* m_saveButton;
     QPushButton* m_finishButton;
@@ -174,15 +323,23 @@ private:
     QPushButton* m_redoButton;
 
     // 工具栏状态
-    bool m_toolbarCollapsed;       // 工具栏是否收起
-    bool m_draggingToolbar;        // 是否正在拖动工具栏
-    QPoint m_dragStartPos;         // 拖动开始位置
-    QPoint m_toolbarDragOffset;    // 拖动偏移量
+    bool m_toolbarCollapsed;
+    bool m_draggingToolbar;
+    QPoint m_dragStartPos;
+    QPoint m_toolbarDragOffset;
 
     // 撤销/重做相关
-    QVector<UndoAction> m_undoStack;   // 撤销栈
-    QVector<UndoAction> m_redoStack;   // 重做栈
-    static const int MAX_UNDO_STEPS = 50;  // 最大撤销步数
+    QVector<UndoAction> m_undoStack;
+    QVector<UndoAction> m_redoStack;
+    static const int MAX_UNDO_STEPS = 50;
+
+    // 调试和优化相关
+    bool m_debugMode;
+    QMargins m_targetMargins;
+    bool m_useHighPrecision;
+    mutable QRect m_cachedTargetRect;
+    mutable bool m_rectCacheValid;
+    int m_updateCount;
 };
 
 #endif // OVERLAYWIDGET_H

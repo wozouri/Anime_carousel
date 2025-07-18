@@ -57,7 +57,7 @@ private slots:
             //m_imageLabel->setStyleSheet("background-color:black;");
             m_overlay = new OverlayWidget(m_imageLabel, this);
         }
-
+        m_overlay->setStyleTheme(OverlayStyleManager::THEME_LIGHT);
         m_overlay->showOverlay();
     }
 

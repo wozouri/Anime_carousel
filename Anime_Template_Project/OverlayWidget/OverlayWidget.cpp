@@ -689,13 +689,13 @@ void OverlayWidget::setupToolbarHeader()
     headerLayout->setContentsMargins(8, 4, 4, 4);
 
     // 标题标签
-    QLabel* titleLabel = new QLabel(tr("增强标注工具"), m_toolbarHeader);
+    QLabel* titleLabel = new QLabel(tr("Enhanced annotation tool"), m_toolbarHeader);// cn: 增强标注工具
     titleLabel->setCursor(Qt::SizeAllCursor);
 
     // 收起/展开按钮
     m_collapseButton = new QPushButton("−", m_toolbarHeader);
     m_collapseButton->setFixedSize(20, 20);
-    m_collapseButton->setToolTip(tr("收起工具栏"));
+    m_collapseButton->setToolTip(tr("Collapse the toolbar"));// cn: 收起工具栏
     connect(m_collapseButton, &QPushButton::clicked, this, &OverlayWidget::toggleToolbarCollapse);
 
     headerLayout->addWidget(titleLabel);
@@ -713,49 +713,49 @@ void OverlayWidget::setupToolButtons()
     m_freeDrawButton->setFixedSize(30, 24);
     m_freeDrawButton->setCheckable(true);
     m_freeDrawButton->setChecked(true);
-    m_freeDrawButton->setToolTip(tr("自由绘制 (P)"));
+    m_freeDrawButton->setToolTip(tr("Plot")+" (P)"); // cn: 自由绘制
     m_toolButtonGroup->addButton(m_freeDrawButton, TOOL_FREE_DRAW);
 
     // 直线
     m_lineButton = new QPushButton("📏", nullptr);
     m_lineButton->setFixedSize(30, 24);
     m_lineButton->setCheckable(true);
-    m_lineButton->setToolTip(tr("直线 (L)"));
+    m_lineButton->setToolTip(tr("Line")+" (L)");// cn: 直线
     m_toolButtonGroup->addButton(m_lineButton, TOOL_LINE);
 
     // 矩形
     m_rectangleButton = new QPushButton("⬜", nullptr);
     m_rectangleButton->setFixedSize(30, 24);
     m_rectangleButton->setCheckable(true);
-    m_rectangleButton->setToolTip(tr("矩形 (R)"));
+    m_rectangleButton->setToolTip(tr("Rectangle")+" (R)");// cn: 矩形
     m_toolButtonGroup->addButton(m_rectangleButton, TOOL_RECTANGLE);
 
     // 椭圆
     m_ellipseButton = new QPushButton("⭕", nullptr);
     m_ellipseButton->setFixedSize(30, 24);
     m_ellipseButton->setCheckable(true);
-    m_ellipseButton->setToolTip(tr("椭圆 (O)"));
+    m_ellipseButton->setToolTip(tr("Ellipse")+" (O)");// cn: 椭圆
     m_toolButtonGroup->addButton(m_ellipseButton, TOOL_ELLIPSE);
 
     // 箭头
     m_arrowButton = new QPushButton("➡️", nullptr);
     m_arrowButton->setFixedSize(30, 24);
     m_arrowButton->setCheckable(true);
-    m_arrowButton->setToolTip(tr("箭头 (A)"));
+    m_arrowButton->setToolTip(tr("Arrows")+" (A)"); // cn: 箭头
     m_toolButtonGroup->addButton(m_arrowButton, TOOL_ARROW);
 
     // 文字
     m_textButton = new QPushButton("📝", nullptr);
     m_textButton->setFixedSize(30, 24);
     m_textButton->setCheckable(true);
-    m_textButton->setToolTip(tr("文字 (T)"));
+    m_textButton->setToolTip(tr("Text")+" (T)"); // cn: 文字
     m_toolButtonGroup->addButton(m_textButton, TOOL_TEXT);
 
     // 橡皮擦
     m_eraserButton = new QPushButton("🧽", nullptr);
     m_eraserButton->setFixedSize(30, 24);
     m_eraserButton->setCheckable(true);
-    m_eraserButton->setToolTip(tr("橡皮擦 (E)"));
+    m_eraserButton->setToolTip(tr("Eraser")+" (E)");// cn: 橡皮擦
     m_toolButtonGroup->addButton(m_eraserButton, TOOL_ERASER);
 
     // 连接信号
@@ -773,7 +773,7 @@ QWidget* OverlayWidget::createToolButtonsWidget()
     toolsLayout->setContentsMargins(0, 0, 0, 0);
 
     // 添加工具提示标签
-    QLabel* toolsLabel = new QLabel(tr("工具:"));
+    QLabel* toolsLabel = new QLabel(tr("Tool:"));// cn:工具:
     toolsLabel->setStyleSheet("color: white; font-size: 10px; font-weight: bold;");
     toolsLayout->addWidget(toolsLabel);
 
@@ -792,10 +792,10 @@ QWidget* OverlayWidget::createToolButtonsWidget()
 void OverlayWidget::setupAttributeControls()
 {
     // 颜色选择按钮
-    m_colorButton = new QPushButton(tr("颜色"));
+    m_colorButton = new QPushButton(tr("Color"));// cn: 颜色
     m_colorButton->setFixedSize(45, 24);
     m_colorButton->setStyleSheet(QString("background-color: %1; color: white;").arg(m_penColor.name()));
-    m_colorButton->setToolTip(tr("选择颜色"));
+    m_colorButton->setToolTip(tr("Select a color"));// cn: 选择颜色
     connect(m_colorButton, &QPushButton::clicked, this, &OverlayWidget::changePenColor);
 
     // 画笔宽度
@@ -803,13 +803,13 @@ void OverlayWidget::setupAttributeControls()
     m_widthSpinBox->setRange(1, 20);
     m_widthSpinBox->setValue(m_penWidth);
     m_widthSpinBox->setFixedSize(50, 24);
-    m_widthSpinBox->setToolTip(tr("画笔宽度 ([/])"));
+    m_widthSpinBox->setToolTip(tr("Pen width"));// cn: 画笔宽度
     connect(m_widthSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
         this, &OverlayWidget::changePenWidth);
 
     // 填充模式
-    m_fillModeCheckBox = new QCheckBox(tr("填充"));
-    m_fillModeCheckBox->setToolTip(tr("填充模式 (F)"));
+    m_fillModeCheckBox = new QCheckBox(tr("Fill")); // cn: 填充
+    m_fillModeCheckBox->setToolTip(tr("Filling pattern")+" (F)");// cn: 填充模式 
     connect(m_fillModeCheckBox, &QCheckBox::toggled, this, &OverlayWidget::toggleFillMode);
 
     // 箭头大小
@@ -818,7 +818,7 @@ void OverlayWidget::setupAttributeControls()
     m_arrowSizeSpinBox->setValue(m_arrowSize);
     m_arrowSizeSpinBox->setFixedSize(50, 24);
     m_arrowSizeSpinBox->setEnabled(false);
-    m_arrowSizeSpinBox->setToolTip(tr("箭头大小"));
+    m_arrowSizeSpinBox->setToolTip(tr("Arrow size")); // cn: 箭头大小
     connect(m_arrowSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
         this, &OverlayWidget::changeArrowSize);
 
@@ -828,7 +828,7 @@ void OverlayWidget::setupAttributeControls()
     m_fontSizeSpinBox->setValue(m_fontSize);
     m_fontSizeSpinBox->setFixedSize(50, 24);
     m_fontSizeSpinBox->setEnabled(false);
-    m_fontSizeSpinBox->setToolTip(tr("字体大小"));
+    m_fontSizeSpinBox->setToolTip(tr("Font size"));// cn: 字体大小
     connect(m_fontSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
         this, &OverlayWidget::changeFontSize);
 
@@ -838,7 +838,7 @@ void OverlayWidget::setupAttributeControls()
     m_eraserSizeSpinBox->setValue(m_eraserSize);
     m_eraserSizeSpinBox->setFixedSize(50, 24);
     m_eraserSizeSpinBox->setEnabled(false);
-    m_eraserSizeSpinBox->setToolTip(tr("橡皮擦大小"));
+    m_eraserSizeSpinBox->setToolTip(tr("Eraser size"));// cn: 橡皮擦大小
     connect(m_eraserSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
         this, &OverlayWidget::changeEraserSize);
 }
@@ -849,27 +849,27 @@ QHBoxLayout* OverlayWidget::createAttributeControlsLayout()
     attributesLayout->setSpacing(4);
 
     // 添加属性提示标签
-    QLabel* attrLabel = new QLabel(tr("属性:"));
+    QLabel* attrLabel = new QLabel(tr("Property:"));// cn: 属性:
     attrLabel->setStyleSheet("color: white; font-size: 10px; font-weight: bold;");
     attributesLayout->addWidget(attrLabel);
 
     attributesLayout->addWidget(m_colorButton);
 
-    QLabel* widthLabel = new QLabel(tr("宽度:"));
+    QLabel* widthLabel = new QLabel(tr("Width:")); // cn: 宽度:
     attributesLayout->addWidget(widthLabel);
     attributesLayout->addWidget(m_widthSpinBox);
 
     attributesLayout->addWidget(m_fillModeCheckBox);
 
-    QLabel* arrowLabel = new QLabel(tr("箭头:"));
+    QLabel* arrowLabel = new QLabel(tr("Arrow:")); // cn: 箭头:
     attributesLayout->addWidget(arrowLabel);
     attributesLayout->addWidget(m_arrowSizeSpinBox);
 
-    QLabel* fontLabel = new QLabel(tr("字号:"));
+    QLabel* fontLabel = new QLabel(tr("Font size:")); // cn: 字号:
     attributesLayout->addWidget(fontLabel);
     attributesLayout->addWidget(m_fontSizeSpinBox);
 
-    QLabel* eraserLabel = new QLabel(tr("擦除:"));
+    QLabel* eraserLabel = new QLabel(tr("Erasure:")); // cn: 擦除:
     attributesLayout->addWidget(eraserLabel);
     attributesLayout->addWidget(m_eraserSizeSpinBox);
 
@@ -881,35 +881,35 @@ QHBoxLayout* OverlayWidget::createAttributeControlsLayout()
 void OverlayWidget::setupActionButtons()
 {
     // 撤销按钮
-    m_undoButton = new QPushButton(tr("撤销"));
+    m_undoButton = new QPushButton(tr("Repeal")); // cn: 撤销
     m_undoButton->setFixedSize(40, 24);
     m_undoButton->setEnabled(false);
-    m_undoButton->setToolTip(tr("撤销 (Ctrl+Z)"));
+    m_undoButton->setToolTip(tr("Repeal")+" (Ctrl+Z)");// cn: 撤销
     connect(m_undoButton, &QPushButton::clicked, this, &OverlayWidget::onUndoClicked);
 
     // 重做按钮
-    m_redoButton = new QPushButton(tr("重做"));
+    m_redoButton = new QPushButton(tr("Renewal")); // cn: 重做
     m_redoButton->setFixedSize(40, 24);
     m_redoButton->setEnabled(false);
-    m_redoButton->setToolTip(tr("重做 (Ctrl+Y)"));
+    m_redoButton->setToolTip(tr("Renewal")+" (Ctrl+Y)"); // cn: 重做
     connect(m_redoButton, &QPushButton::clicked, this, &OverlayWidget::onRedoClicked);
 
     // 清除按钮
-    m_clearButton = new QPushButton(tr("清除"));
+    m_clearButton = new QPushButton(tr("Clear"));// cn: 清除
     m_clearButton->setFixedSize(40, 24);
-    m_clearButton->setToolTip(tr("清除所有 (Delete)"));
+    m_clearButton->setToolTip(tr("Clear all")+" (Delete)");// cn: 清除所有
     connect(m_clearButton, &QPushButton::clicked, this, &OverlayWidget::onClearClicked);
 
     // 保存按钮
-    m_saveButton = new QPushButton(tr("保存"));
+    m_saveButton = new QPushButton(tr("Save"));// cn: 保存
     m_saveButton->setFixedSize(40, 24);
-    m_saveButton->setToolTip(tr("保存图片 (Ctrl+S)"));
+    m_saveButton->setToolTip(tr("Save the image")+" (Ctrl+S)");// cn: 保存图片
     connect(m_saveButton, &QPushButton::clicked, this, &OverlayWidget::onSaveClicked);
 
     // 完成按钮
-    m_finishButton = new QPushButton(tr("完成"));
+    m_finishButton = new QPushButton(tr("Complete"));// cn: 完成
     m_finishButton->setFixedSize(40, 24);
-    m_finishButton->setToolTip(tr("完成标注 (ESC)"));
+    m_finishButton->setToolTip(tr("Complete the annotation.")+" (ESC)"); // cn: 完成标注
     connect(m_finishButton, &QPushButton::clicked, this, &OverlayWidget::onFinishClicked);
 }
 
@@ -919,7 +919,7 @@ QHBoxLayout* OverlayWidget::createActionButtonsLayout()
     actionLayout->setSpacing(4);
 
     // 添加操作提示标签
-    QLabel* actionLabel = new QLabel(tr("操作:"));
+    QLabel* actionLabel = new QLabel(tr("Operate:"));// cn: 操作:
     actionLabel->setStyleSheet("color: white; font-size: 10px; font-weight: bold;");
     actionLayout->addWidget(actionLabel);
 
@@ -936,50 +936,50 @@ QHBoxLayout* OverlayWidget::createActionButtonsLayout()
 void OverlayWidget::setupAdvancedControls()
 {
     // 导入按钮
-    m_importButton = new QPushButton(tr("导入"));
+    m_importButton = new QPushButton(tr("Import"));// cn: 导入
     m_importButton->setFixedSize(40, 24);
-    m_importButton->setToolTip(tr("导入标注数据"));
+    m_importButton->setToolTip(tr("Import annotation data"));// cn: 导入标注数据
     connect(m_importButton, &QPushButton::clicked, this, &OverlayWidget::onImportClicked);
 
     // 导出按钮
-    m_exportButton = new QPushButton(tr("导出"));
+    m_exportButton = new QPushButton(tr("Export"));// cn: 导出
     m_exportButton->setFixedSize(40, 24);
-    m_exportButton->setToolTip(tr("导出标注数据"));
+    m_exportButton->setToolTip(tr("Export annotation data"));// cn: 导出标注数据
     connect(m_exportButton, &QPushButton::clicked, this, &OverlayWidget::onExportClicked);
 
     // 配置保存按钮
-    m_configSaveButton = new QPushButton(tr("存配置"));
+    m_configSaveButton = new QPushButton(tr("Save configuration"));// cn: 保存配置
     m_configSaveButton->setFixedSize(50, 24);
-    m_configSaveButton->setToolTip(tr("保存当前配置"));
+    m_configSaveButton->setToolTip(tr("Save the current configuration"));// cn: 保存当前配置
     connect(m_configSaveButton, &QPushButton::clicked, this, &OverlayWidget::onConfigSaveClicked);
 
     // 配置加载按钮
-    m_configLoadButton = new QPushButton(tr("读配置"));
+    m_configLoadButton = new QPushButton(tr("Reading configuration"));// cn: 读配置
     m_configLoadButton->setFixedSize(50, 24);
-    m_configLoadButton->setToolTip(tr("加载配置"));
+    m_configLoadButton->setToolTip(tr("Load Configuration"));// cn: 加载配置
     connect(m_configLoadButton, &QPushButton::clicked, this, &OverlayWidget::onConfigLoadClicked);
 
     // 主题选择
     m_themeComboBox = new QComboBox();
-    m_themeComboBox->addItem(tr("深色主题"), OverlayStyleManager::THEME_DARK);
-    m_themeComboBox->addItem(tr("浅色主题"), OverlayStyleManager::THEME_LIGHT);
-    m_themeComboBox->addItem(tr("蓝色主题"), OverlayStyleManager::THEME_BLUE);
-    m_themeComboBox->addItem(tr("绿色主题"), OverlayStyleManager::THEME_GREEN);
+    m_themeComboBox->addItem(tr("Dark theme"), OverlayStyleManager::THEME_DARK);// cn: 深色主题
+    m_themeComboBox->addItem(tr("Light-colored theme"), OverlayStyleManager::THEME_LIGHT);// cn: 浅色主题
+    m_themeComboBox->addItem(tr("Blue Theme"), OverlayStyleManager::THEME_BLUE);// cn: 蓝色主题
+    m_themeComboBox->addItem(tr("Green theme"), OverlayStyleManager::THEME_GREEN);// cn: 绿色主题
     m_themeComboBox->setFixedSize(80, 24);
-    m_themeComboBox->setToolTip(tr("选择主题"));
+    m_themeComboBox->setToolTip(tr("Select theme"));// cn: 选择主题
     connect(m_themeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
         this, &OverlayWidget::onThemeChanged);
 
     // 帮助按钮
     m_helpButton = new QPushButton("❓");
     m_helpButton->setFixedSize(24, 24);
-    m_helpButton->setToolTip(tr("显示快捷键帮助"));
+    m_helpButton->setToolTip(tr("Show shortcut key help"));// cn: 显示快捷键帮助
     connect(m_helpButton, &QPushButton::clicked, this, &OverlayWidget::onShowHelpClicked);
 
     // 关于按钮
     m_aboutButton = new QPushButton("ℹ️");
     m_aboutButton->setFixedSize(24, 24);
-    m_aboutButton->setToolTip(tr("关于此工具"));
+    m_aboutButton->setToolTip(tr("About this tool"));// cn: 关于此工具
     connect(m_aboutButton, &QPushButton::clicked, this, &OverlayWidget::onShowAboutClicked);
 }
 
@@ -989,7 +989,7 @@ QHBoxLayout* OverlayWidget::createAdvancedControlsLayout()
     advancedLayout->setSpacing(4);
 
     // 添加高级功能提示标签
-    QLabel* advancedLabel = new QLabel(tr("高级:"));
+    QLabel* advancedLabel = new QLabel(tr("Advanced:"));// cn: 高级
     advancedLabel->setStyleSheet("color: white; font-size: 10px; font-weight: bold;");
     advancedLayout->addWidget(advancedLabel);
 
@@ -998,7 +998,7 @@ QHBoxLayout* OverlayWidget::createAdvancedControlsLayout()
     advancedLayout->addWidget(m_configSaveButton);
     advancedLayout->addWidget(m_configLoadButton);
 
-    QLabel* themeLabel = new QLabel(tr("主题:"));
+    QLabel* themeLabel = new QLabel(tr("Theme:"));// cn: 主题
     advancedLayout->addWidget(themeLabel);
     advancedLayout->addWidget(m_themeComboBox);
 
@@ -1012,21 +1012,21 @@ QHBoxLayout* OverlayWidget::createAdvancedControlsLayout()
 void OverlayWidget::setupDebugControls()
 {
     // 调试模式复选框
-    m_debugModeCheckBox = new QCheckBox(tr("调试模式"));
+    m_debugModeCheckBox = new QCheckBox(tr("Debug mode"));// cn: 调试模式
     m_debugModeCheckBox->setChecked(m_debugMode);
-    m_debugModeCheckBox->setToolTip(tr("启用调试信息显示"));
+    m_debugModeCheckBox->setToolTip(tr("Enable debug information display"));// cn: 启用调试信息显示
     connect(m_debugModeCheckBox, &QCheckBox::toggled, this, &OverlayWidget::onDebugModeToggled);
 
     // 测试缩放按钮
-    m_testScalingButton = new QPushButton(tr("测试缩放"));
+    m_testScalingButton = new QPushButton(tr("Scale test"));// cn: 测试缩放
     m_testScalingButton->setFixedSize(60, 24);
-    m_testScalingButton->setToolTip(tr("测试缩放精度"));
+    m_testScalingButton->setToolTip(tr("Test the scaling accuracy"));// cn: 测试缩放精度
     connect(m_testScalingButton, &QPushButton::clicked, this, &OverlayWidget::onTestScalingClicked);
 
     // 性能统计按钮
-    m_performanceStatsButton = new QPushButton(tr("性能统计"));
+    m_performanceStatsButton = new QPushButton(tr("Performance statistics"));// cn: 性能统计
     m_performanceStatsButton->setFixedSize(60, 24);
-    m_performanceStatsButton->setToolTip(tr("显示性能统计信息"));
+    m_performanceStatsButton->setToolTip(tr("Display performance statistics information"));// cn: 显示性能统计信息
     connect(m_performanceStatsButton, &QPushButton::clicked, this, &OverlayWidget::onShowPerformanceStats);
 }
 
@@ -1036,7 +1036,7 @@ QHBoxLayout* OverlayWidget::createDebugControlsLayout()
     debugLayout->setSpacing(4);
 
     // 添加调试功能提示标签
-    QLabel* debugLabel = new QLabel(tr("调试:"));
+    QLabel* debugLabel = new QLabel(tr("Debug:"));// cn: 调试:
     debugLabel->setStyleSheet("color: yellow; font-size: 10px; font-weight: bold;");
     debugLayout->addWidget(debugLabel);
 
@@ -2082,7 +2082,7 @@ QCursor OverlayWidget::createEraserCursor()
 
 void OverlayWidget::changePenColor()
 {
-    QColor newColor = QColorDialog::getColor(m_penColor, this, tr("选择颜色"));
+    QColor newColor = QColorDialog::getColor(m_penColor, this, tr("Select a Color"));// cn: 选择颜色
     if (newColor.isValid()) {
         m_penColor = newColor;
         m_colorButton->setStyleSheet(QString("background-color: %1; color: white;").arg(m_penColor.name()));
@@ -2138,13 +2138,13 @@ void OverlayWidget::updateToolbarLayout()
         // 收起状态：隐藏内容区域
         m_toolbarContent->hide();
         m_collapseButton->setText("+");
-        m_collapseButton->setToolTip(tr("展开工具栏"));
+        m_collapseButton->setToolTip(tr("Expand the toolbar"));// cn: 展开工具栏
     }
     else {
         // 展开状态：显示内容区域
         m_toolbarContent->show();
         m_collapseButton->setText("−");
-        m_collapseButton->setToolTip(tr("收起工具栏"));
+        m_collapseButton->setToolTip(tr("Collapse the toolbar"));// cn: 收起工具栏
     }
 
     // 调整工具栏大小
@@ -2595,10 +2595,11 @@ void OverlayWidget::saveImage()
         drawShapes(painter);  // 新增：保存几何图形
 
         if (pixmap.save(fileName)) {
-            QMessageBox::information(this, tr("保存成功"), tr("增强标注图片已保存到: ") + fileName);
+            QMessageBox::information(this, tr("Saved successfully"), tr("Enhanced annotated image has been saved to: ") + fileName);
+                                             // cn: 保存成功 增强标注图片已保存到:
         }
         else {
-            QMessageBox::warning(this, tr("保存失败"), tr("无法保存图片"));
+            QMessageBox::warning(this, tr("Fail to save"), tr("Cannot save the image"));// cn:保存失败 无法保存图片
         }
     }
 }
@@ -3332,7 +3333,26 @@ void OverlayWidget::setStyleTheme(OverlayStyleManager::StyleTheme theme)
 void OverlayWidget::showShortcutsHelp()
 {
     QString helpText = tr(
-        "快捷键帮助\n\n"
+        "Shortcut Key Help \n\n"
+        "Tool Switching :\n"
+        "P - Plot  L - Line  R - Rectangle \n"
+        "O - Ellipse A-Arrow T-Text E-Eraser \n\n"
+        "Operation :\n"
+        "Ctrl+Z - Undo  Ctrl+Y - Redo \n"
+        "Ctrl+S - Save  ESC - Exit Annotation \n"
+        "Delete - Clear all  Spaces - Switch toolbar \n\n"
+        "Color (Ctrl+ Number):\n"
+        "1- Red 2- Green 3- Blue 4- Yellow 5- Magenta 6- Cyan 7- Black 8- White \n\n"
+        "Size adjustment :\n"
+        "[-decrease] -increase \n"
+        "F - Switch fill Mode (Rectangle/Ellipse) \n\n"
+        "Mouse operation :\n"
+        "Scroll Wheel - Adjust the current tool size \n"
+        "Drag - Draw Graphic \n"
+        "DoubleClick - Add Text"
+    );
+    /*
+     "快捷键帮助\n\n"
         "工具切换:\n"
         "P - 自由绘制  L - 直线  R - 矩形\n"
         "O - 椭圆  A - 箭头  T - 文字  E - 橡皮擦\n\n"
@@ -3349,9 +3369,9 @@ void OverlayWidget::showShortcutsHelp()
         "滚轮 - 调整当前工具大小\n"
         "拖拽 - 绘制图形\n"
         "双击 - 添加文字"
-    );
+    */
 
-    QMessageBox::information(this, tr("快捷键帮助"), helpText);
+    QMessageBox::information(this, tr("Shortcut key help"), helpText);// cn: 快捷键帮助
 }
 
 // 在构造函数或setupUI中添加帮助按钮
@@ -3361,7 +3381,7 @@ void OverlayWidget::addHelpButton()
 
     QPushButton* helpButton = new QPushButton("?", m_toolbarContent);
     helpButton->setFixedSize(24, 24);
-    helpButton->setToolTip(tr("显示快捷键帮助"));
+    helpButton->setToolTip(tr("Show shortcut key help"));// cn: 显示快捷键帮助
     helpButton->setStyleSheet(
         "QPushButton { "
         "  background-color: rgba(100, 100, 100, 150); "
@@ -3478,25 +3498,25 @@ void OverlayWidget::updateToolTips()
     QString currentToolInfo;
     switch (m_currentTool) {
     case TOOL_FREE_DRAW:
-        currentToolInfo = tr("当前: 自由绘制 - 按住鼠标拖拽绘制");
+        currentToolInfo = tr("Currently: Plot - Hold down the mouse and drag to draw");// cn: 当前: 自由绘制 - 按住鼠标拖拽绘制
         break;
     case TOOL_LINE:
-        currentToolInfo = tr("当前: 直线 - 点击起点拖拽到终点");
+        currentToolInfo = tr("Current: Line - Click on the starting point and drag to the end point");// cn: 当前: 直线 - 点击起点拖拽到终点
         break;
     case TOOL_RECTANGLE:
-        currentToolInfo = tr("当前: 矩形 - 对角拖拽定义矩形");
+        currentToolInfo = tr("Currently: Rectangle - diagonally drag to define the rectangle");// cn: 当前: 矩形 - 对角拖拽定义矩形
         break;
     case TOOL_ELLIPSE:
-        currentToolInfo = tr("当前: 椭圆 - 拖拽定义椭圆边界");
+        currentToolInfo = tr("Currently: Ellipse - Drag defines the ellipse boundary");// cn: 当前: 椭圆 - 拖拽定义椭圆边界
         break;
     case TOOL_ARROW:
-        currentToolInfo = tr("当前: 箭头 - 从起点拖拽到指向目标");
+        currentToolInfo = tr("Current: Arrow - Drag from the starting point to the target");// cn: 当前: 箭头 - 从起点拖拽到指向目标
         break;
     case TOOL_TEXT:
-        currentToolInfo = tr("当前: 文字 - 点击位置添加文字");
+        currentToolInfo = tr("Current: Text - Click on the position to add text");// cn: 当前: 文字 - 点击位置添加文字
         break;
     case TOOL_ERASER:
-        currentToolInfo = tr("当前: 橡皮擦 - 点击或拖拽擦除内容");
+        currentToolInfo = tr("Current: Eraser - Click or drag to erase the content");// cn: 当前: 橡皮擦 - 点击或拖拽擦除内容
         break;
     }
 
@@ -3710,10 +3730,10 @@ void OverlayWidget::updateUndoRedoButtons()
             // 显示将要撤销的操作类型
             ActionType lastAction = m_undoStack.last().type;
             QString actionName = getActionName(lastAction);
-            m_undoButton->setToolTip(tr("撤销: %1 (Ctrl+Z)").arg(actionName));
+            m_undoButton->setToolTip(QString("%1: %2 (Ctrl+Z)").arg(tr("undo")).arg(actionName));// cn: 撤销
         }
         else {
-            m_undoButton->setToolTip(tr("撤销 (Ctrl+Z)"));
+            m_undoButton->setToolTip(QString("%1 (Ctrl+Z)").arg(tr("undo"))); // cn: 撤销
         }
     }
 
@@ -3723,10 +3743,10 @@ void OverlayWidget::updateUndoRedoButtons()
             // 显示将要重做的操作类型
             ActionType nextAction = m_redoStack.last().type;
             QString actionName = getActionName(nextAction);
-            m_redoButton->setToolTip(tr("重做: %1 (Ctrl+Y)").arg(actionName));
+            m_redoButton->setToolTip(QString("%1: %2 (Ctrl+Y)").arg(tr("redo")).arg(actionName)); // cn: 重做
         }
         else {
-            m_redoButton->setToolTip(tr("重做 (Ctrl+Y)"));
+            m_redoButton->setToolTip(QString("%1 (Ctrl+Y)").arg(tr("redo")));// cn: 重做
         }
     }
 }
@@ -3734,13 +3754,13 @@ void OverlayWidget::updateUndoRedoButtons()
 QString OverlayWidget::getActionName(ActionType actionType) const
 {
     switch (actionType) {
-    case ACTION_DRAW_PATH: return tr("绘制路径");
-    case ACTION_ADD_TEXT: return tr("添加文字");
-    case ACTION_EDIT_TEXT: return tr("编辑文字");
-    case ACTION_DELETE_TEXT: return tr("删除文字");
-    case ACTION_ADD_SHAPE: return tr("添加图形");
-    case ACTION_ERASE: return tr("擦除内容");
-    default: return tr("未知操作");
+    case ACTION_DRAW_PATH: return tr("DrawPath");// cn: 绘制路径
+    case ACTION_ADD_TEXT: return tr("AddText");// cn: 添加文字
+    case ACTION_EDIT_TEXT: return tr("EditText");// cn: 编辑文字
+    case ACTION_DELETE_TEXT: return tr("DeleteText");// cn: 删除文字
+    case ACTION_ADD_SHAPE: return tr("AddGraphics");// cn: 添加图形
+    case ACTION_ERASE: return tr("EraseContents");// cn: 擦除内容
+    default: return tr("UnknownOption");// cn: 未知操作
     }
 }
 
@@ -3755,24 +3775,28 @@ bool OverlayWidget::hasUnsavedChanges() const
 
 QString OverlayWidget::getStatusText() const
 {
-    return QString(tr("路径: %1 | 文字: %2 | 图形: %3 | 工具: %4"))
+    return QString(tr("%1: %2 | %3: %4 | %5: %6 | %7: %8"))
+        .arg(tr("Path")) // cn: 路径
         .arg(getPathCount())
+        .arg(tr("Text")) // cn: 文字
         .arg(getTextCount())
+        .arg(tr("Graph")) // cn: 图形
         .arg(getShapeCount())
+        .arg(tr("Tool"))// cn: 工具
         .arg(getToolName(m_currentTool));
 }
 
 QString OverlayWidget::getToolName(DrawingTool tool) const
 {
     switch (tool) {
-    case TOOL_FREE_DRAW: return tr("自由绘制");
-    case TOOL_LINE: return tr("直线");
-    case TOOL_RECTANGLE: return tr("矩形");
-    case TOOL_ELLIPSE: return tr("椭圆");
-    case TOOL_ARROW: return tr("箭头");
-    case TOOL_TEXT: return tr("文字");
-    case TOOL_ERASER: return tr("橡皮擦");
-    default: return tr("未知工具");
+    case TOOL_FREE_DRAW: return tr("Plot"); // cn: 自由绘制
+    case TOOL_LINE: return tr("Line"); // cn: 直线
+    case TOOL_RECTANGLE: return tr("Rectangle");// cn: 矩形
+    case TOOL_ELLIPSE: return tr("Ellipse"); // cn: 椭圆
+    case TOOL_ARROW: return tr("Arrows"); // cn: 箭头
+    case TOOL_TEXT: return tr("Text"); // cn: 文字
+    case TOOL_ERASER: return tr("Eraser");// cn: 橡皮擦
+    default: return tr("UnknownTools");// cn :未知工具
     }
 }
 
@@ -4059,7 +4083,7 @@ void OverlayWidget::onRedoClicked()
 void OverlayWidget::onClearClicked()
 {
     QMessageBox::StandardButton reply = QMessageBox::question(
-        this, tr("确认清除"), tr("确定要清除所有标注内容吗？"),
+        this, tr("Confirm and clear"), tr("Are you sure you want to clear all the marked content?"),// cn: 确认清除 确定要清除所有标注内容吗?
         QMessageBox::Yes | QMessageBox::No);
 
     if (reply == QMessageBox::Yes) {
@@ -4080,9 +4104,9 @@ void OverlayWidget::onFinishClicked()
 void OverlayWidget::onImportClicked()
 {
     QString fileName = QFileDialog::getOpenFileName(
-        this, tr("导入标注数据"),
+        this, tr("Import annotated data"), // cn: 导入标注数据
         QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation),
-        tr("JSON Files (*.json);;All Files (*)")
+        tr("JSON Files (*.json);;All Files (*)")// cn: JSON 文件 (*.json);; 所有文件 (*)
     );
 
     if (!fileName.isEmpty()) {
@@ -4090,14 +4114,14 @@ void OverlayWidget::onImportClicked()
         if (file.open(QIODevice::ReadOnly)) {
             QString jsonData = QString::fromUtf8(file.readAll());
             if (importAnnotationData(jsonData)) {
-                QMessageBox::information(this, tr("导入成功"), tr("标注数据已成功导入"));
+                QMessageBox::information(this, tr("Import successful"), tr("The annotation data has been successfully imported"));// cn: 导入成功 标注数据已成功导入
             }
             else {
-                QMessageBox::warning(this, tr("导入失败"), tr("无法解析标注数据文件"));
+                QMessageBox::warning(this, tr("Import failed"), tr("Unable to parse the annotation data file"));// cn: 导入失败 无法解析标注数据文件
             }
         }
         else {
-            QMessageBox::warning(this, tr("导入失败"), tr("无法读取文件"));
+            QMessageBox::warning(this, tr("Import failed"), tr("Unable to read the file")); // cn: 导入失败 无法读取文件
         }
     }
 }
@@ -4105,10 +4129,10 @@ void OverlayWidget::onImportClicked()
 void OverlayWidget::onExportClicked()
 {
     QString fileName = QFileDialog::getSaveFileName(
-        this, tr("导出标注数据"),
+        this, tr("Export annotation data"), // cn: 导出标注数据
         QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) +
         "/annotation_" + QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss") + ".json",
-        tr("JSON Files (*.json);;All Files (*)")
+        tr("JSON Files (*.json);;All Files (*)")// cn: JSON 文件 (*.json);; 所有文件 (*)
     );
 
     if (!fileName.isEmpty()) {
@@ -4116,10 +4140,10 @@ void OverlayWidget::onExportClicked()
         if (file.open(QIODevice::WriteOnly)) {
             QString jsonData = exportAnnotationData();
             file.write(jsonData.toUtf8());
-            QMessageBox::information(this, tr("导出成功"), tr("标注数据已保存到: ") + fileName);
+            QMessageBox::information(this, tr("Import successful"), tr("Annotation data has been saved to:") + fileName); // cn: 导出成功 标注数据已保存到: 
         }
         else {
-            QMessageBox::warning(this, tr("导出失败"), tr("无法写入文件"));
+            QMessageBox::warning(this, tr("Import failed"), tr("Unable to write to the file"));// cn: 导出失败 无法写入文件
         }
     }
 }
@@ -4127,29 +4151,29 @@ void OverlayWidget::onExportClicked()
 void OverlayWidget::onConfigSaveClicked()
 {
     QString fileName = QFileDialog::getSaveFileName(
-        this, tr("保存配置"),
+        this, tr("Save configuration"), // cn: 保存配置
         QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) +
         "/overlay_config.ini",
-        tr("Config Files (*.ini);;All Files (*)")
+        tr("Config Files (*.ini);;All Files (*)") // cn: 配置文件 (*.ini);; 所有文件 (*)
     );
 
     if (!fileName.isEmpty()) {
         saveConfiguration(fileName);
-        QMessageBox::information(this, tr("保存成功"), tr("配置已保存"));
+        QMessageBox::information(this, tr("Saved successfully"), tr("Configuration has been saved"));// cn: 保存成功 配置已保存
     }
 }
 
 void OverlayWidget::onConfigLoadClicked()
 {
     QString fileName = QFileDialog::getOpenFileName(
-        this, tr("加载配置"),
+        this, tr("Load configuration"),// cn: 加载配置
         QStandardPaths::writableLocation(QStandardPaths::ConfigLocation),
-        tr("Config Files (*.ini);;All Files (*)")
+        tr("Config Files (*.ini);;All Files (*)")// cn: 配置文件 (*.ini);; 所有文件 (*)
     );
 
     if (!fileName.isEmpty()) {
         loadConfiguration(fileName);
-        QMessageBox::information(this, tr("加载成功"), tr("配置已加载"));
+        QMessageBox::information(this, tr("Loading completed"), tr("Configuration has been loaded"));// cn: 加载成功 配置已加载
     }
 }
 
@@ -4166,8 +4190,19 @@ void OverlayWidget::onShowHelpClicked()
 
 void OverlayWidget::onShowAboutClicked()
 {
-    QMessageBox::about(this, tr("关于增强标注工具"),
-        tr("<h3>增强版Widget遮罩标注工具 v2.0</h3>"
+    QMessageBox::about(this, tr("Regarding the enhanced annotation tool"), // cn: 关于增强标注工具
+        tr("<h3> Enhanced Widget Mask Annotation Tool v2.0</h3>"
+        "<p> This is a powerful Qt annotation tool that supports:</p>"
+        "<ul>"
+        "<li>7 Professional Drawing Tools</li>"
+        "<li>Zero-error scaling system</li>"
+        "<li>Completely undo redo function</li>"
+        "<li>Smart Toolbar Interface</li>"
+        "<li>Multiple theme styles</li>"
+        "</ul>"));
+
+    /*
+           tr("<h3>增强版Widget遮罩标注工具 v2.0</h3>"
             "<p>这是一个功能强大的Qt标注工具，支持:</p>"
             "<ul>"
             "<li>7种专业绘制工具</li>"
@@ -4175,9 +4210,8 @@ void OverlayWidget::onShowAboutClicked()
             "<li>完整撤销重做功能</li>"
             "<li>智能工具栏界面</li>"
             "<li>多种主题样式</li>"
-            "</ul>"
-            "<p>版权所有 © 2024</p>"
-            "<p>基于MIT许可证发布</p>"));
+            "</ul>"));
+    */
 }
 
 void OverlayWidget::onToolbarDragBegin()
@@ -4211,13 +4245,13 @@ void OverlayWidget::onShowPerformanceStats()
 {
     PerformanceMonitor::instance().printStatistics();
 
-    QString statsText = tr("性能统计信息已输出到控制台\n\n");
-    statsText += tr("平均绘制时间: %1ms\n").arg(
+    QString statsText = tr("The performance statistics have been output to the console\n\n"); // cn:性能统计信息已输出到控制台\n\n
+    statsText += tr("Average drawing time: %1ms\n").arg( // cn: 平均绘制时间
         PerformanceMonitor::instance().getAverageTime("paintEvent"));
-    statsText += tr("平均更新时间: %1ms\n").arg(
+    statsText += tr("Average update time: %1ms\n").arg( // cn: 平均更新时间
         PerformanceMonitor::instance().getAverageTime("updateOverlayGeometry"));
 
-    QMessageBox::information(this, tr("性能统计"), statsText);
+    QMessageBox::information(this, tr("performance statistics"), statsText); // cn: 性能统计
 }
 
 

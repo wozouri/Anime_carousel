@@ -765,90 +765,6 @@ void OverlayWidget::setupToolButtons()
 
 
 
-//void OverlayWidget::setupToolButtons()
-//{
-//    // 创建工具按钮组
-//    m_toolButtonGroup = new QButtonGroup(this);
-//
-//    // 创建工具按钮容器
-//    QWidget* toolsWidget = new QWidget(m_toolbarContent);
-//    QHBoxLayout* toolsLayout = new QHBoxLayout(toolsWidget);
-//    toolsLayout->setSpacing(2);
-//    toolsLayout->setContentsMargins(0, 0, 0, 0);
-//
-//    // 自由绘制
-//    m_freeDrawButton = new QPushButton("✏️", toolsWidget);
-//    m_freeDrawButton->setFixedSize(30, 24);
-//    m_freeDrawButton->setCheckable(true);
-//    m_freeDrawButton->setChecked(true);
-//    m_freeDrawButton->setToolTip(tr("自由绘制"));
-//    m_toolButtonGroup->addButton(m_freeDrawButton, TOOL_FREE_DRAW);
-//
-//    // 直线
-//    m_lineButton = new QPushButton("📏", toolsWidget);
-//    m_lineButton->setFixedSize(30, 24);
-//    m_lineButton->setCheckable(true);
-//    m_lineButton->setToolTip(tr("直线"));
-//    m_toolButtonGroup->addButton(m_lineButton, TOOL_LINE);
-//
-//    // 矩形
-//    m_rectangleButton = new QPushButton("⬜", toolsWidget);
-//    m_rectangleButton->setFixedSize(30, 24);
-//    m_rectangleButton->setCheckable(true);
-//    m_rectangleButton->setToolTip(tr("矩形"));
-//    m_toolButtonGroup->addButton(m_rectangleButton, TOOL_RECTANGLE);
-//
-//    // 椭圆
-//    m_ellipseButton = new QPushButton("⭕", toolsWidget);
-//    m_ellipseButton->setFixedSize(30, 24);
-//    m_ellipseButton->setCheckable(true);
-//    m_ellipseButton->setToolTip(tr("椭圆"));
-//    m_toolButtonGroup->addButton(m_ellipseButton, TOOL_ELLIPSE);
-//
-//    // 箭头
-//    m_arrowButton = new QPushButton("➡️", toolsWidget);
-//    m_arrowButton->setFixedSize(30, 24);
-//    m_arrowButton->setCheckable(true);
-//    m_arrowButton->setToolTip(tr("箭头"));
-//    m_toolButtonGroup->addButton(m_arrowButton, TOOL_ARROW);
-//
-//    // 文字
-//    m_textButton = new QPushButton("📝", toolsWidget);
-//    m_textButton->setFixedSize(30, 24);
-//    m_textButton->setCheckable(true);
-//    m_textButton->setToolTip(tr("文字"));
-//    m_toolButtonGroup->addButton(m_textButton, TOOL_TEXT);
-//
-//    // 橡皮擦
-//    m_eraserButton = new QPushButton("🧽", toolsWidget);
-//    m_eraserButton->setFixedSize(30, 24);
-//    m_eraserButton->setCheckable(true);
-//    m_eraserButton->setToolTip(tr("橡皮擦"));
-//    m_toolButtonGroup->addButton(m_eraserButton, TOOL_ERASER);
-//
-//    toolsLayout->addWidget(m_freeDrawButton);
-//    toolsLayout->addWidget(m_lineButton);
-//    toolsLayout->addWidget(m_rectangleButton);
-//    toolsLayout->addWidget(m_ellipseButton);
-//    toolsLayout->addWidget(m_arrowButton);
-//    toolsLayout->addWidget(m_textButton);
-//    toolsLayout->addWidget(m_eraserButton);
-//    toolsLayout->addStretch();
-//
-//    // 连接信号
-//    connect(m_toolButtonGroup, QOverload<int>::of(&QButtonGroup::buttonClicked),
-//        this, &OverlayWidget::setDrawingTool);
-//
-//    // 将工具按钮容器添加到内容布局
-//    QVBoxLayout* contentLayout = qobject_cast<QVBoxLayout*>(m_toolbarContent->layout());
-//    if (!contentLayout) {
-//        contentLayout = new QVBoxLayout(m_toolbarContent);
-//        contentLayout->setSpacing(3);
-//        contentLayout->setContentsMargins(6, 4, 6, 6);
-//    }
-//    contentLayout->insertWidget(0, toolsWidget);
-//}
-
 QWidget* OverlayWidget::createToolButtonsWidget()
 {
     QWidget* toolsWidget = new QWidget();
@@ -1699,31 +1615,6 @@ void OverlayWidget::handleTextClick(const QPoint& position)
 }
 
 
-//void OverlayWidget::keyPressEvent(QKeyEvent* event)
-//{
-//    if (event->key() == Qt::Key_Escape) {
-//        finishEditing();
-//    }
-//    else if (event->key() == Qt::Key_Delete || event->key() == Qt::Key_Backspace) {
-//        clearCanvas();
-//    }
-//    else if (event->key() == Qt::Key_Z && (event->modifiers() & Qt::ControlModifier)) {
-//        if (event->modifiers() & Qt::ShiftModifier) {
-//            // Ctrl+Shift+Z 重做
-//            redoLastAction();
-//        }
-//        else {
-//            // Ctrl+Z 撤销
-//            undoLastAction();
-//        }
-//    }
-//    else if (event->key() == Qt::Key_Y && (event->modifiers() & Qt::ControlModifier)) {
-//        // Ctrl+Y 重做（另一种常用快捷键）
-//        redoLastAction();
-//    }
-//
-//    QWidget::keyPressEvent(event);
-//}
 
 void OverlayWidget::mouseDoubleClickEvent(QMouseEvent* event)
 {
@@ -2278,27 +2169,6 @@ void OverlayWidget::constrainToolbarPosition()
     m_toolbar->move(pos);
 }
 
-//void OverlayWidget::updateToolButtonStates()
-//{
-//    // 更新属性控件的可用状态
-//    bool isArrowTool = (m_currentTool == TOOL_ARROW);
-//    bool isTextTool = (m_currentTool == TOOL_TEXT);
-//    bool isEraserTool = (m_currentTool == TOOL_ERASER);
-//    bool isShapeTool = (m_currentTool == TOOL_RECTANGLE || m_currentTool == TOOL_ELLIPSE);
-//
-//    if (m_arrowSizeSpinBox) {
-//        m_arrowSizeSpinBox->setEnabled(isArrowTool);
-//    }
-//    if (m_fontSizeSpinBox) {
-//        m_fontSizeSpinBox->setEnabled(isTextTool);
-//    }
-//    if (m_eraserSizeSpinBox) {
-//        m_eraserSizeSpinBox->setEnabled(isEraserTool);
-//    }
-//    if (m_fillModeCheckBox) {
-//        m_fillModeCheckBox->setEnabled(isShapeTool);
-//    }
-//}
 
 // ============================================================================
 // 撤销重做功能
@@ -2700,30 +2570,7 @@ void OverlayWidget::hideOverlay()
     // 注意：不清除内容，保留用户的标注
 }
 
-//void OverlayWidget::clearCanvas()
-//{
-//    if (m_textEdit) {
-//        finishTextInput();
-//    }
-//
-//    m_paths.clear();
-//    m_currentPath.clear();
-//    m_textItems.clear();
-//    m_shapes.clear();  // 新增：清除几何图形
-//
-//    if (m_useRelativeCoordinates) {
-//        m_relativePaths.clear();
-//        m_currentRelativePath.clear();
-//        m_relativeTextItems.clear();
-//        m_relativeShapes.clear();  // 新增：清除相对坐标几何图形
-//    }
-//
-//    m_undoStack.clear();
-//    m_redoStack.clear();
-//    updateUndoRedoButtons();
-//
-//    update();
-//}
+
 
 void OverlayWidget::saveImage()
 {
@@ -3534,71 +3381,6 @@ void OverlayWidget::addHelpButton()
     // 这里需要根据实际的布局来确定位置
 }
 
-// ============================================================================
-// 配置保存和加载
-// ============================================================================
-
-//void OverlayWidget::saveConfiguration(const QString& filePath)
-//{
-//    QSettings settings(filePath, QSettings::IniFormat);
-//    
-//    // 保存当前工具设置
-//    settings.setValue("currentTool", static_cast<int>(m_currentTool));
-//    settings.setValue("penColor", m_penColor.name());
-//    settings.setValue("penWidth", m_penWidth);
-//    settings.setValue("fontSize", m_fontSize);
-//    settings.setValue("fillMode", m_fillMode);
-//    settings.setValue("arrowSize", m_arrowSize);
-//    settings.setValue("eraserSize", m_eraserSize);
-//    
-//    // 保存样式主题
-//    settings.setValue("styleTheme", static_cast<int>(OverlayStyleManager::instance().getCurrentTheme()));
-//    
-//    // 保存功能选项
-//    settings.setValue("useRelativeCoordinates", m_useRelativeCoordinates);
-//    settings.setValue("debugMode", m_debugMode);
-//    settings.setValue("highPrecisionMode", m_useHighPrecision);
-//    
-//    // 保存工具栏状态
-//    settings.setValue("toolbarCollapsed", m_toolbarCollapsed);
-//    if (m_toolbar) {
-//        settings.setValue("toolbarPosition", m_toolbar->pos());
-//    }
-//}
-
-//void OverlayWidget::loadConfiguration(const QString& filePath)
-//{
-//    QSettings settings(filePath, QSettings::IniFormat);
-//    
-//    // 加载工具设置
-//    setDrawingTool(static_cast<DrawingTool>(settings.value("currentTool", TOOL_FREE_DRAW).toInt()));
-//    changePenColorTo(QColor(settings.value("penColor", "#FF0000").toString()));
-//    changePenWidth(settings.value("penWidth", 3).toInt());
-//    changeFontSize(settings.value("fontSize", 12).toInt());
-//    toggleFillMode(settings.value("fillMode", false).toBool());
-//    changeArrowSize(settings.value("arrowSize", 10).toInt());
-//    changeEraserSize(settings.value("eraserSize", 20).toInt());
-//    
-//    // 加载样式主题
-//    auto theme = static_cast<OverlayStyleManager::StyleTheme>(
-//        settings.value("styleTheme", OverlayStyleManager::THEME_DARK).toInt());
-//    setStyleTheme(theme);
-//    
-//    // 加载功能选项
-//    setUseRelativeCoordinates(settings.value("useRelativeCoordinates", true).toBool());
-//    setDebugMode(settings.value("debugMode", false).toBool());
-//    setHighPrecisionMode(settings.value("highPrecisionMode", false).toBool());
-//    
-//    // 加载工具栏状态
-//    m_toolbarCollapsed = settings.value("toolbarCollapsed", false).toBool();
-//    updateToolbarLayout();
-//    
-//    if (m_toolbar) {
-//        QPoint pos = settings.value("toolbarPosition", QPoint(10, 10)).toPoint();
-//        m_toolbar->move(pos);
-//        constrainToolbarPosition();
-//    }
-//}
 
 // =============================================================================
 // 新增的公共接口实现
@@ -4514,7 +4296,7 @@ OverlayWidget::RelativeTextItem OverlayWidget::RelativeTextItem::fromAbsolute(
     return relItem;
 }
 
-// RelativeShapeItem 方法实现
+
 OverlayWidget::ShapeItem OverlayWidget::RelativeShapeItem::toAbsolute(const QSize& containerSize) const
 {
     ShapeItem item;
@@ -4553,7 +4335,7 @@ OverlayWidget::RelativeShapeItem OverlayWidget::RelativeShapeItem::fromAbsolute(
     return relItem;
 }
 
-// ErasedData::isEmpty() 实现
+
 bool OverlayWidget::ErasedData::isEmpty() const
 {
     return erasedPathIndices.isEmpty() &&

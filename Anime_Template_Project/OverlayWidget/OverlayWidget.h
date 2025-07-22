@@ -478,9 +478,9 @@ private:
 
     // 橡皮擦功能
     void performErase(const QPoint& position);
+    bool isShapeInEraserRange(const ShapeItem& shape, const QPoint& eraserCenter);
     bool isPointInEraserRange(const QPoint& point, const QPoint& eraserCenter);
     bool isTextInEraserRange(const TextItem& textItem, const QPoint& eraserCenter);
-    bool isShapeInEraserRange(const ShapeItem& shape, const QPoint& eraserCenter);
     bool isLineIntersectCircle(const QPoint& lineStart, const QPoint& lineEnd,
         const QPoint& circleCenter, int radius);
     QCursor createEraserCursor();

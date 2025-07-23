@@ -277,6 +277,7 @@ protected:
     void leaveEvent(QEvent* event) override;
     void wheelEvent(QWheelEvent* event) override;
     bool eventFilter(QObject* obj, QEvent* event) override;
+    void changeEvent(QEvent* e)override;
 
 private slots:
     // =============================================================================
@@ -426,6 +427,13 @@ private:
         ErasedData erasedData;
     };
 
+    // 主题相关
+    struct ThemeItem {
+        QString key;
+        QString text;
+        QVariant data;
+    };
+
     // =============================================================================
     // UI管理函数
     // =============================================================================
@@ -538,6 +546,13 @@ private:
     QString getDefaultConfigPath() const;
     void emitModificationSignal();
 
+
+    // =============================================================================
+    // 国际化
+    // =============================================================================
+
+    void retranslateUi();
+
     // =============================================================================
     // 成员变量
     // =============================================================================
@@ -612,6 +627,20 @@ private:
     bool m_draggingToolbar;
     QPoint m_dragStartPos;
     QPoint m_toolbarDragOffset;
+
+    // 标签
+    QLabel* m_titleLabel;
+    QLabel* m_toolsLabel;
+    QLabel* m_attrLabel;
+    QLabel* m_widthLabel;
+    QLabel* m_arrowLabel;
+    QLabel* m_fontLabel;
+    QLabel* m_eraserLabel;
+    QLabel* m_actionLabel;
+    QLabel* m_advancedLabel;
+    QLabel* m_themeLabel;
+    QLabel* m_debugLabel;
+
 
     // 工具选择区域
     QButtonGroup* m_toolButtonGroup;

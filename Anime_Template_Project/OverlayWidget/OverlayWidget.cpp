@@ -578,6 +578,19 @@ bool OverlayWidget::eventFilter(QObject* obj, QEvent* event)
     return QWidget::eventFilter(obj, event);
 }
 
+void OverlayWidget::changeEvent(QEvent* e)
+{
+    QWidget::changeEvent(e);
+    switch (e->type()) {
+    case QEvent::LanguageChange: {
+        retranslateUi();
+        break;
+    }
+    default:
+        break;
+    }
+}
+
 // ============================================================================
 // UI设置
 // ============================================================================
@@ -689,16 +702,16 @@ void OverlayWidget::setupToolbarHeader()
     headerLayout->setContentsMargins(8, 4, 4, 4);
 
     // 标题标签
-    QLabel* titleLabel = new QLabel(tr("Enhanced annotation tool"), m_toolbarHeader);// cn: 增强标注工具
-    titleLabel->setCursor(Qt::SizeAllCursor);
+    m_titleLabel = new QLabel(tr("Enhanced annotation tool"), m_toolbarHeader);// cn: 增强标注工具
+    m_titleLabel->setCursor(Qt::SizeAllCursor);
 
     // 收起/展开按钮
     m_collapseButton = new QPushButton("−", m_toolbarHeader);
-    m_collapseButton->setFixedSize(20, 20);
+    m_collapseButton->setFixedSize(m_collapseButton->sizeHint().width(), 20);
     m_collapseButton->setToolTip(tr("Collapse the toolbar"));// cn: 收起工具栏
     connect(m_collapseButton, &QPushButton::clicked, this, &OverlayWidget::toggleToolbarCollapse);
 
-    headerLayout->addWidget(titleLabel);
+    headerLayout->addWidget(m_titleLabel);
     headerLayout->addStretch();
     headerLayout->addWidget(m_collapseButton);
 }
@@ -710,7 +723,7 @@ void OverlayWidget::setupToolButtons()
 
     // 自由绘制
     m_freeDrawButton = new QPushButton("✏️", nullptr);
-    m_freeDrawButton->setFixedSize(30, 24);
+    m_freeDrawButton->setFixedSize(m_freeDrawButton->sizeHint().width(), 24);
     m_freeDrawButton->setCheckable(true);
     m_freeDrawButton->setChecked(true);
     m_freeDrawButton->setToolTip(tr("Plot")+" (P)"); // cn: 自由绘制
@@ -718,42 +731,42 @@ void OverlayWidget::setupToolButtons()
 
     // 直线
     m_lineButton = new QPushButton("📏", nullptr);
-    m_lineButton->setFixedSize(30, 24);
+    m_lineButton->setFixedSize(m_lineButton->sizeHint().width(), 24);
     m_lineButton->setCheckable(true);
     m_lineButton->setToolTip(tr("Line")+" (L)");// cn: 直线
     m_toolButtonGroup->addButton(m_lineButton, TOOL_LINE);
 
     // 矩形
     m_rectangleButton = new QPushButton("⬜", nullptr);
-    m_rectangleButton->setFixedSize(30, 24);
+    m_rectangleButton->setFixedSize(m_rectangleButton->sizeHint().width(), 24);
     m_rectangleButton->setCheckable(true);
     m_rectangleButton->setToolTip(tr("Rectangle")+" (R)");// cn: 矩形
     m_toolButtonGroup->addButton(m_rectangleButton, TOOL_RECTANGLE);
 
     // 椭圆
     m_ellipseButton = new QPushButton("⭕", nullptr);
-    m_ellipseButton->setFixedSize(30, 24);
+    m_ellipseButton->setFixedSize(m_ellipseButton->sizeHint().width(), 24);
     m_ellipseButton->setCheckable(true);
     m_ellipseButton->setToolTip(tr("Ellipse")+" (O)");// cn: 椭圆
     m_toolButtonGroup->addButton(m_ellipseButton, TOOL_ELLIPSE);
 
     // 箭头
     m_arrowButton = new QPushButton("➡️", nullptr);
-    m_arrowButton->setFixedSize(30, 24);
+    m_arrowButton->setFixedSize(m_arrowButton->sizeHint().width(), 24);
     m_arrowButton->setCheckable(true);
     m_arrowButton->setToolTip(tr("Arrows")+" (A)"); // cn: 箭头
     m_toolButtonGroup->addButton(m_arrowButton, TOOL_ARROW);
 
     // 文字
     m_textButton = new QPushButton("📝", nullptr);
-    m_textButton->setFixedSize(30, 24);
+    m_textButton->setFixedSize(m_textButton->sizeHint().width(), 24);
     m_textButton->setCheckable(true);
     m_textButton->setToolTip(tr("Text")+" (T)"); // cn: 文字
     m_toolButtonGroup->addButton(m_textButton, TOOL_TEXT);
 
     // 橡皮擦
     m_eraserButton = new QPushButton("🧽", nullptr);
-    m_eraserButton->setFixedSize(30, 24);
+    m_eraserButton->setFixedSize(m_eraserButton->sizeHint().width(), 24);
     m_eraserButton->setCheckable(true);
     m_eraserButton->setToolTip(tr("Eraser")+" (E)");// cn: 橡皮擦
     m_toolButtonGroup->addButton(m_eraserButton, TOOL_ERASER);
@@ -773,9 +786,9 @@ QWidget* OverlayWidget::createToolButtonsWidget()
     toolsLayout->setContentsMargins(0, 0, 0, 0);
 
     // 添加工具提示标签
-    QLabel* toolsLabel = new QLabel(tr("Tool:"));// cn:工具:
-    toolsLabel->setStyleSheet("color: white; font-size: 10px; font-weight: bold;");
-    toolsLayout->addWidget(toolsLabel);
+    m_toolsLabel = new QLabel(tr("Tool:"));// cn:工具:
+    //m_toolsLabel->setStyleSheet("color: white; font-size: 10px; font-weight: bold;");
+    toolsLayout->addWidget(m_toolsLabel);
 
     toolsLayout->addWidget(m_freeDrawButton);
     toolsLayout->addWidget(m_lineButton);
@@ -793,7 +806,7 @@ void OverlayWidget::setupAttributeControls()
 {
     // 颜色选择按钮
     m_colorButton = new QPushButton(tr("Color"));// cn: 颜色
-    m_colorButton->setFixedSize(45, 24);
+    m_colorButton->setFixedSize(m_colorButton->sizeHint().width(), 24);
     m_colorButton->setStyleSheet(QString("background-color: %1; color: white;").arg(m_penColor.name()));
     m_colorButton->setToolTip(tr("Select a color"));// cn: 选择颜色
     connect(m_colorButton, &QPushButton::clicked, this, &OverlayWidget::changePenColor);
@@ -802,7 +815,7 @@ void OverlayWidget::setupAttributeControls()
     m_widthSpinBox = new QSpinBox();
     m_widthSpinBox->setRange(1, 20);
     m_widthSpinBox->setValue(m_penWidth);
-    m_widthSpinBox->setFixedSize(50, 24);
+    m_widthSpinBox->setFixedSize(m_widthSpinBox->sizeHint().width(), 24);
     m_widthSpinBox->setToolTip(tr("Pen width"));// cn: 画笔宽度
     connect(m_widthSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
         this, &OverlayWidget::changePenWidth);
@@ -816,7 +829,7 @@ void OverlayWidget::setupAttributeControls()
     m_arrowSizeSpinBox = new QSpinBox();
     m_arrowSizeSpinBox->setRange(5, 30);
     m_arrowSizeSpinBox->setValue(m_arrowSize);
-    m_arrowSizeSpinBox->setFixedSize(50, 24);
+    m_arrowSizeSpinBox->setFixedSize(m_arrowSizeSpinBox->sizeHint().width(), 24);
     m_arrowSizeSpinBox->setEnabled(false);
     m_arrowSizeSpinBox->setToolTip(tr("Arrow size")); // cn: 箭头大小
     connect(m_arrowSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
@@ -826,7 +839,7 @@ void OverlayWidget::setupAttributeControls()
     m_fontSizeSpinBox = new QSpinBox();
     m_fontSizeSpinBox->setRange(8, 72);
     m_fontSizeSpinBox->setValue(m_fontSize);
-    m_fontSizeSpinBox->setFixedSize(50, 24);
+    m_fontSizeSpinBox->setFixedSize(m_fontSizeSpinBox->sizeHint().width(), 24);
     m_fontSizeSpinBox->setEnabled(false);
     m_fontSizeSpinBox->setToolTip(tr("Font size"));// cn: 字体大小
     connect(m_fontSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
@@ -836,7 +849,7 @@ void OverlayWidget::setupAttributeControls()
     m_eraserSizeSpinBox = new QSpinBox();
     m_eraserSizeSpinBox->setRange(10, 80);
     m_eraserSizeSpinBox->setValue(m_eraserSize);
-    m_eraserSizeSpinBox->setFixedSize(50, 24);
+    m_eraserSizeSpinBox->setFixedSize(m_eraserSizeSpinBox->sizeHint().width(), 24);
     m_eraserSizeSpinBox->setEnabled(false);
     m_eraserSizeSpinBox->setToolTip(tr("Eraser size"));// cn: 橡皮擦大小
     connect(m_eraserSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
@@ -849,28 +862,28 @@ QHBoxLayout* OverlayWidget::createAttributeControlsLayout()
     attributesLayout->setSpacing(4);
 
     // 添加属性提示标签
-    QLabel* attrLabel = new QLabel(tr("Property:"));// cn: 属性:
-    attrLabel->setStyleSheet("color: white; font-size: 10px; font-weight: bold;");
-    attributesLayout->addWidget(attrLabel);
+    m_attrLabel = new QLabel(tr("Property:"));// cn: 属性:
+    //m_attrLabel->setStyleSheet("color: white; font-size: 10px; font-weight: bold;");
+    attributesLayout->addWidget(m_attrLabel);
 
     attributesLayout->addWidget(m_colorButton);
 
-    QLabel* widthLabel = new QLabel(tr("Width:")); // cn: 宽度:
-    attributesLayout->addWidget(widthLabel);
+    m_widthLabel = new QLabel(tr("Width:")); // cn: 宽度:
+    attributesLayout->addWidget(m_widthLabel);
     attributesLayout->addWidget(m_widthSpinBox);
 
     attributesLayout->addWidget(m_fillModeCheckBox);
 
-    QLabel* arrowLabel = new QLabel(tr("Arrow:")); // cn: 箭头:
-    attributesLayout->addWidget(arrowLabel);
+    m_arrowLabel = new QLabel(tr("Arrow:")); // cn: 箭头:
+    attributesLayout->addWidget(m_arrowLabel);
     attributesLayout->addWidget(m_arrowSizeSpinBox);
 
-    QLabel* fontLabel = new QLabel(tr("Font size:")); // cn: 字号:
-    attributesLayout->addWidget(fontLabel);
+    m_fontLabel = new QLabel(tr("Font size:")); // cn: 字号:
+    attributesLayout->addWidget(m_fontLabel);
     attributesLayout->addWidget(m_fontSizeSpinBox);
 
-    QLabel* eraserLabel = new QLabel(tr("Erasure:")); // cn: 擦除:
-    attributesLayout->addWidget(eraserLabel);
+    m_eraserLabel = new QLabel(tr("Erasure:")); // cn: 擦除:
+    attributesLayout->addWidget(m_eraserLabel);
     attributesLayout->addWidget(m_eraserSizeSpinBox);
 
     attributesLayout->addStretch();
@@ -881,34 +894,34 @@ QHBoxLayout* OverlayWidget::createAttributeControlsLayout()
 void OverlayWidget::setupActionButtons()
 {
     // 撤销按钮
-    m_undoButton = new QPushButton(tr("Repeal")); // cn: 撤销
-    m_undoButton->setFixedSize(40, 24);
+    m_undoButton = new QPushButton(tr("Undo")); // cn: 撤销
+    m_undoButton->setFixedSize(m_undoButton->sizeHint().width(), 24);
     m_undoButton->setEnabled(false);
-    m_undoButton->setToolTip(tr("Repeal")+" (Ctrl+Z)");// cn: 撤销
+    m_undoButton->setToolTip(tr("Undo")+" (Ctrl+Z)");// cn: 撤销
     connect(m_undoButton, &QPushButton::clicked, this, &OverlayWidget::onUndoClicked);
 
     // 重做按钮
-    m_redoButton = new QPushButton(tr("Renewal")); // cn: 重做
-    m_redoButton->setFixedSize(40, 24);
+    m_redoButton = new QPushButton(tr("Redo")); // cn: 重做
+    m_redoButton->setFixedSize(m_redoButton->sizeHint().width(), 24);
     m_redoButton->setEnabled(false);
-    m_redoButton->setToolTip(tr("Renewal")+" (Ctrl+Y)"); // cn: 重做
+    m_redoButton->setToolTip(tr("Redo")+" (Ctrl+Y)"); // cn: 重做
     connect(m_redoButton, &QPushButton::clicked, this, &OverlayWidget::onRedoClicked);
 
     // 清除按钮
     m_clearButton = new QPushButton(tr("Clear"));// cn: 清除
-    m_clearButton->setFixedSize(40, 24);
+    m_clearButton->setFixedSize(m_clearButton->sizeHint().width(), 24);
     m_clearButton->setToolTip(tr("Clear all")+" (Delete)");// cn: 清除所有
     connect(m_clearButton, &QPushButton::clicked, this, &OverlayWidget::onClearClicked);
 
     // 保存按钮
     m_saveButton = new QPushButton(tr("Save"));// cn: 保存
-    m_saveButton->setFixedSize(40, 24);
+    m_saveButton->setFixedSize(m_saveButton->sizeHint().width(), 24);
     m_saveButton->setToolTip(tr("Save the image")+" (Ctrl+S)");// cn: 保存图片
     connect(m_saveButton, &QPushButton::clicked, this, &OverlayWidget::onSaveClicked);
 
     // 完成按钮
     m_finishButton = new QPushButton(tr("Complete"));// cn: 完成
-    m_finishButton->setFixedSize(40, 24);
+    m_finishButton->setFixedSize(m_finishButton->sizeHint().width(), 24);
     m_finishButton->setToolTip(tr("Complete the annotation.")+" (ESC)"); // cn: 完成标注
     connect(m_finishButton, &QPushButton::clicked, this, &OverlayWidget::onFinishClicked);
 }
@@ -919,9 +932,9 @@ QHBoxLayout* OverlayWidget::createActionButtonsLayout()
     actionLayout->setSpacing(4);
 
     // 添加操作提示标签
-    QLabel* actionLabel = new QLabel(tr("Operate:"));// cn: 操作:
-    actionLabel->setStyleSheet("color: white; font-size: 10px; font-weight: bold;");
-    actionLayout->addWidget(actionLabel);
+    m_actionLabel = new QLabel(tr("Operate:"));// cn: 操作:
+    //m_actionLabel->setStyleSheet("color: white; font-size: 10px; font-weight: bold;");
+    actionLayout->addWidget(m_actionLabel);
 
     actionLayout->addWidget(m_undoButton);
     actionLayout->addWidget(m_redoButton);
@@ -937,48 +950,56 @@ void OverlayWidget::setupAdvancedControls()
 {
     // 导入按钮
     m_importButton = new QPushButton(tr("Import"));// cn: 导入
-    m_importButton->setFixedSize(40, 24);
+    m_importButton->setFixedSize(m_importButton->sizeHint().width(), 24);
     m_importButton->setToolTip(tr("Import annotation data"));// cn: 导入标注数据
     connect(m_importButton, &QPushButton::clicked, this, &OverlayWidget::onImportClicked);
 
     // 导出按钮
     m_exportButton = new QPushButton(tr("Export"));// cn: 导出
-    m_exportButton->setFixedSize(40, 24);
+    m_exportButton->setFixedSize(m_exportButton->sizeHint().width(), 24);
     m_exportButton->setToolTip(tr("Export annotation data"));// cn: 导出标注数据
     connect(m_exportButton, &QPushButton::clicked, this, &OverlayWidget::onExportClicked);
 
     // 配置保存按钮
     m_configSaveButton = new QPushButton(tr("Save configuration"));// cn: 保存配置
-    m_configSaveButton->setFixedSize(50, 24);
+    m_configSaveButton->setFixedSize(m_configSaveButton->sizeHint().width(), 24);
     m_configSaveButton->setToolTip(tr("Save the current configuration"));// cn: 保存当前配置
     connect(m_configSaveButton, &QPushButton::clicked, this, &OverlayWidget::onConfigSaveClicked);
 
     // 配置加载按钮
     m_configLoadButton = new QPushButton(tr("Reading configuration"));// cn: 读配置
-    m_configLoadButton->setFixedSize(50, 24);
+    m_configLoadButton->setFixedSize(m_configLoadButton->sizeHint().width(), 24);
     m_configLoadButton->setToolTip(tr("Load Configuration"));// cn: 加载配置
     connect(m_configLoadButton, &QPushButton::clicked, this, &OverlayWidget::onConfigLoadClicked);
 
     // 主题选择
     m_themeComboBox = new QComboBox();
-    m_themeComboBox->addItem(tr("Dark theme"), OverlayStyleManager::THEME_DARK);// cn: 深色主题
-    m_themeComboBox->addItem(tr("Light-colored theme"), OverlayStyleManager::THEME_LIGHT);// cn: 浅色主题
-    m_themeComboBox->addItem(tr("Blue Theme"), OverlayStyleManager::THEME_BLUE);// cn: 蓝色主题
-    m_themeComboBox->addItem(tr("Green theme"), OverlayStyleManager::THEME_GREEN);// cn: 绿色主题
-    m_themeComboBox->setFixedSize(80, 24);
+    QList<ThemeItem> themes = {
+       {"dark", tr("Dark theme"), OverlayStyleManager::THEME_DARK},
+       {"light", tr("Light-colored theme"), OverlayStyleManager::THEME_LIGHT},
+       {"blue", tr("Blue Theme"), OverlayStyleManager::THEME_BLUE},
+       {"green", tr("Green theme"), OverlayStyleManager::THEME_GREEN}
+    };
+
+    for (const auto& theme : themes) {
+        m_themeComboBox->addItem(theme.text, theme.data);
+        // 存储翻译键用于后续更新
+        m_themeComboBox->setItemData(m_themeComboBox->count() - 1, theme.key, Qt::UserRole + 1);
+    }
+    m_themeComboBox->setFixedSize(m_themeComboBox->sizeHint().width(), 24);
     m_themeComboBox->setToolTip(tr("Select theme"));// cn: 选择主题
     connect(m_themeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
         this, &OverlayWidget::onThemeChanged);
 
     // 帮助按钮
     m_helpButton = new QPushButton("❓");
-    m_helpButton->setFixedSize(24, 24);
+    m_helpButton->setFixedSize(m_helpButton->sizeHint().width(), 24);
     m_helpButton->setToolTip(tr("Show shortcut key help"));// cn: 显示快捷键帮助
     connect(m_helpButton, &QPushButton::clicked, this, &OverlayWidget::onShowHelpClicked);
 
     // 关于按钮
     m_aboutButton = new QPushButton("ℹ️");
-    m_aboutButton->setFixedSize(24, 24);
+    m_aboutButton->setFixedSize(m_aboutButton->sizeHint().width(), 24);
     m_aboutButton->setToolTip(tr("About this tool"));// cn: 关于此工具
     connect(m_aboutButton, &QPushButton::clicked, this, &OverlayWidget::onShowAboutClicked);
 }
@@ -989,17 +1010,17 @@ QHBoxLayout* OverlayWidget::createAdvancedControlsLayout()
     advancedLayout->setSpacing(4);
 
     // 添加高级功能提示标签
-    QLabel* advancedLabel = new QLabel(tr("Advanced:"));// cn: 高级
-    advancedLabel->setStyleSheet("color: white; font-size: 10px; font-weight: bold;");
-    advancedLayout->addWidget(advancedLabel);
+    m_advancedLabel = new QLabel(tr("Advanced:"));// cn: 高级
+    //m_advancedLabel->setStyleSheet("color: white; font-size: 10px; font-weight: bold;");
+    advancedLayout->addWidget(m_advancedLabel);
 
     advancedLayout->addWidget(m_importButton);
     advancedLayout->addWidget(m_exportButton);
-    advancedLayout->addWidget(m_configSaveButton);
-    advancedLayout->addWidget(m_configLoadButton);
+    //advancedLayout->addWidget(m_configSaveButton);
+    //advancedLayout->addWidget(m_configLoadButton);
 
-    QLabel* themeLabel = new QLabel(tr("Theme:"));// cn: 主题
-    advancedLayout->addWidget(themeLabel);
+    m_themeLabel = new QLabel(tr("Theme:"));// cn: 主题
+    advancedLayout->addWidget(m_themeLabel);
     advancedLayout->addWidget(m_themeComboBox);
 
     advancedLayout->addStretch();
@@ -1019,13 +1040,13 @@ void OverlayWidget::setupDebugControls()
 
     // 测试缩放按钮
     m_testScalingButton = new QPushButton(tr("Scale test"));// cn: 测试缩放
-    m_testScalingButton->setFixedSize(60, 24);
+    m_testScalingButton->setFixedSize(m_testScalingButton->sizeHint().width(), 24);
     m_testScalingButton->setToolTip(tr("Test the scaling accuracy"));// cn: 测试缩放精度
     connect(m_testScalingButton, &QPushButton::clicked, this, &OverlayWidget::onTestScalingClicked);
 
     // 性能统计按钮
     m_performanceStatsButton = new QPushButton(tr("Performance statistics"));// cn: 性能统计
-    m_performanceStatsButton->setFixedSize(60, 24);
+    m_performanceStatsButton->setFixedSize(m_performanceStatsButton->sizeHint().width(), 24);
     m_performanceStatsButton->setToolTip(tr("Display performance statistics information"));// cn: 显示性能统计信息
     connect(m_performanceStatsButton, &QPushButton::clicked, this, &OverlayWidget::onShowPerformanceStats);
 }
@@ -1036,9 +1057,9 @@ QHBoxLayout* OverlayWidget::createDebugControlsLayout()
     debugLayout->setSpacing(4);
 
     // 添加调试功能提示标签
-    QLabel* debugLabel = new QLabel(tr("Debug:"));// cn: 调试:
-    debugLabel->setStyleSheet("color: yellow; font-size: 10px; font-weight: bold;");
-    debugLayout->addWidget(debugLabel);
+    m_debugLabel = new QLabel(tr("Debug:"));// cn: 调试:
+    //m_debugLabel->setStyleSheet("color: yellow; font-size: 10px; font-weight: bold;");
+    debugLayout->addWidget(m_debugLabel);
 
     debugLayout->addWidget(m_debugModeCheckBox);
     debugLayout->addWidget(m_testScalingButton);
@@ -3380,7 +3401,7 @@ void OverlayWidget::addHelpButton()
     if (!m_toolbarContent) return;
 
     QPushButton* helpButton = new QPushButton("?", m_toolbarContent);
-    helpButton->setFixedSize(24, 24);
+    helpButton->setFixedSize(helpButton->sizeHint().width(), 24);
     helpButton->setToolTip(tr("Show shortcut key help"));// cn: 显示快捷键帮助
     helpButton->setStyleSheet(
         "QPushButton { "
@@ -3522,9 +3543,9 @@ void OverlayWidget::updateToolTips()
 
     // 更新工具栏标题
     if (m_toolbarHeader) {
-        QLabel* titleLabel = m_toolbarHeader->findChild<QLabel*>();
-        if (titleLabel) {
-            titleLabel->setToolTip(currentToolInfo);
+        m_titleLabel = m_toolbarHeader->findChild<QLabel*>();
+        if (m_titleLabel) {
+            m_titleLabel->setToolTip(currentToolInfo);
         }
     }
 }
@@ -3653,6 +3674,7 @@ void OverlayWidget::emitModificationSignal()
     // 同时更新撤销重做按钮状态
     updateUndoRedoButtons();
 }
+
 
 // =============================================================================
 // 增强的工具切换函数
@@ -3973,7 +3995,7 @@ QString OverlayStyleManager::generateToolbarStyleSheet() const
         "} "
         "QSpinBox { "
         "  color: rgb(%10, %11, %12); "
-        "  background-color: rgba(70, 70, 70, 200); "
+        "  background-color: rgba(%1, %2, %3, 200); "
         "  border: 1px solid gray; "
         "  padding: 2px; "
         "} "
@@ -3987,9 +4009,16 @@ QString OverlayStyleManager::generateToolbarStyleSheet() const
         "} "
         "QComboBox { "
         "  color: rgb(%10, %11, %12); "
-        "  background-color: rgba(70, 70, 70, 200); "
+        "  background-color: rgba(%1, %2, %3, 200); "
         "  border: 1px solid gray; "
         "  padding: 2px; "
+        "}"
+        "QComboBox QAbstractItemView {"
+        "  color: rgb(%10, %11, %12); "
+        "border: 2px solid darkgray;"
+        "selection-background-color: rgb(%10, %11, %12);"
+        "selection-color: rgb(%1, %2, %3);"
+        "background-color:  rgba(%1, %2, %3, 200);"
         "}"
     )
         .arg(style.toolbarBackgroundColor.red()).arg(style.toolbarBackgroundColor.green())
@@ -4375,4 +4404,95 @@ bool OverlayWidget::ErasedData::isEmpty() const
     return erasedPathIndices.isEmpty() &&
         erasedTextIndices.isEmpty() &&
         erasedShapeIndices.isEmpty();
+}
+
+
+
+// =============================================================================
+// 国际化
+// =============================================================================
+
+void OverlayWidget::retranslateUi()
+{
+    m_titleLabel ->setText(tr("Enhanced annotation tool"));// cn: 增强标注工具
+    m_toolsLabel ->setText(tr("Tool:"));// cn:工具:
+    m_attrLabel ->setText(tr("Property:"));// cn: 属性:
+    m_widthLabel ->setText(tr("Width:")); // cn: 宽度:
+    m_arrowLabel ->setText(tr("Arrow:")); // cn: 箭头:
+    m_fontLabel ->setText(tr("Font size:")); // cn: 字号:
+    m_eraserLabel ->setText(tr("Erasure:")); // cn: 擦除:
+    m_actionLabel ->setText(tr("Operate:"));// cn: 操作:
+    m_advancedLabel ->setText(tr("Advanced:"));// cn: 高级
+    m_themeLabel ->setText(tr("Theme:"));// cn: 主题
+    if (m_debugMode) {
+        m_debugLabel ->setText(tr("Debug:"));// cn: 调试:
+    }
+
+    m_finishButton->setText(tr("Complete"));// cn: 完成
+    m_colorButton->setText(tr("Color"));// cn: 颜色
+    m_fillModeCheckBox->setText(tr("Fill")); // cn: 填充
+    m_undoButton->setText(tr("Undo")); // cn: 撤销
+    m_redoButton->setText(tr("Redo")); // cn: 重做
+    m_clearButton->setText(tr("Clear"));// cn: 清除
+    m_saveButton->setText(tr("Save"));// cn: 保存
+    m_importButton->setText(tr("Import"));// cn: 导入
+    m_exportButton->setText(tr("Export"));// cn: 导出
+    m_configSaveButton->setText(tr("Save configuration"));// cn: 保存配置
+    m_configLoadButton->setText(tr("Reading configuration"));// cn: 读配置
+    if (m_debugMode) {
+        m_debugModeCheckBox->setText(tr("Debug mode"));// cn: 调试模式
+        m_testScalingButton->setText(tr("Scale test"));// cn: 测试缩放
+        m_performanceStatsButton->setText(tr("Performance statistics"));// cn: 性能统计
+    }
+    m_ellipseButton->setToolTip(tr("Ellipse") + " (O)");// cn: 椭圆
+    m_freeDrawButton->setToolTip(tr("Plot") + " (P)"); // cn: 自由绘制
+    m_lineButton->setToolTip(tr("Line") + " (L)");// cn: 直线
+    m_rectangleButton->setToolTip(tr("Rectangle") + " (R)");// cn: 矩形
+    m_arrowButton->setToolTip(tr("Arrows") + " (A)"); // cn: 箭头
+    m_textButton->setToolTip(tr("Text") + " (T)"); // cn: 文字
+    m_eraserButton->setToolTip(tr("Eraser") + " (E)");// cn: 橡皮擦
+    m_colorButton->setToolTip(tr("Select a color"));// cn: 选择颜色
+    m_widthSpinBox->setToolTip(tr("Pen width"));// cn: 画笔宽度
+    m_fillModeCheckBox->setToolTip(tr("Filling pattern") + " (F)");// cn: 填充模式 
+    m_arrowSizeSpinBox->setToolTip(tr("Arrow size")); // cn: 箭头大小
+    m_fontSizeSpinBox->setToolTip(tr("Font size"));// cn: 字体大小
+    m_eraserSizeSpinBox->setToolTip(tr("Eraser size"));// cn: 橡皮擦大小
+    m_undoButton->setToolTip(tr("Undo") + " (Ctrl+Z)");// cn: 撤销
+    m_redoButton->setToolTip(tr("Redo") + " (Ctrl+Y)"); // cn: 重做
+    m_clearButton->setToolTip(tr("Clear all") + " (Delete)");// cn: 清除所有
+    m_saveButton->setToolTip(tr("Save the image") + " (Ctrl+S)");// cn: 保存图片
+    m_finishButton->setToolTip(tr("Complete the annotation.") + " (ESC)"); // cn: 完成标注
+    m_importButton->setToolTip(tr("Import annotation data"));// cn: 导入标注数据
+    m_exportButton->setToolTip(tr("Export annotation data"));// cn: 导出标注数据
+    m_configSaveButton->setToolTip(tr("Save the current configuration"));// cn: 保存当前配置
+    m_configLoadButton->setToolTip(tr("Load Configuration"));// cn: 加载配置
+    m_themeComboBox->setToolTip(tr("Select theme"));// cn: 选择主题
+    m_helpButton->setToolTip(tr("Show shortcut key help"));// cn: 显示快捷键帮助
+    m_aboutButton->setToolTip(tr("About this tool"));// cn: 关于此工具
+    if (m_debugMode) {
+        m_debugModeCheckBox->setToolTip(tr("Enable debug information display"));// cn: 启用调试信息显示
+        m_testScalingButton->setToolTip(tr("Test the scaling accuracy"));// cn: 测试缩放精度
+        m_performanceStatsButton->setToolTip(tr("Display performance statistics information"));// cn: 显示性能统计信息
+    }
+    if (m_toolbarCollapsed) {
+        m_collapseButton->setToolTip(tr("Expand the toolbar"));// cn: 展开工具栏
+    }
+    else {
+        m_collapseButton->setToolTip(tr("Collapse the toolbar"));// cn: 收起工具栏
+    }
+
+    QMap<QString, QString> translations = {
+      {"dark", tr("Dark theme")},
+      {"light", tr("Light-colored theme")},
+      {"blue", tr("Blue Theme")},
+      {"green", tr("Green theme")}
+    };
+
+    for (int i = 0; i < m_themeComboBox->count(); ++i) {
+        QString key = m_themeComboBox->itemData(i, Qt::UserRole + 1).toString();
+        if (translations.contains(key)) {
+            m_themeComboBox->setItemText(i, translations[key]);
+        }
+    }
+
 }
